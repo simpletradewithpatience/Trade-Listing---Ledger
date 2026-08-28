@@ -1,0 +1,1334 @@
+
+<title>STWP Trade Ledger</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f6f7f3;
+    --page: #eef0ea;
+    --surface: #ffffff;
+    --surface-2: #fbfcf9;
+    --ink: #14180f;
+    --ink-2: #52584a;
+    --muted: #868c7c;
+    --border: rgba(20, 24, 15, 0.11);
+    --border-strong: rgba(20, 24, 15, 0.22);
+    --grid: #e4e6dd;
+    --baseline: #b9bdac;
+    --good: #027b06;
+    --good-wash: rgba(2, 123, 6, 0.09);
+    --critical: #d8262f;
+    --critical-wash: rgba(216, 38, 47, 0.08);
+    --warning: #f99309;
+    --warning-wash: rgba(249, 147, 9, 0.12);
+    --warning-ink: #8a5200;
+    --tooltip-bg: #14180f;
+    --tooltip-ink: #f6f7f3;
+    --focus: #1c5cab;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0e120e;
+      --page: #0a0d09;
+      --surface: #171b16;
+      --surface-2: #12150f;
+      --ink: #f2f4ec;
+      --ink-2: #b7bdae;
+      --muted: #82887a;
+      --border: rgba(255, 255, 255, 0.10);
+      --border-strong: rgba(255, 255, 255, 0.18);
+      --grid: #262b23;
+      --baseline: #3c4237;
+      --good: #35b23f;
+      --good-wash: rgba(53, 178, 63, 0.14);
+      --critical: #e8555f;
+      --critical-wash: rgba(232, 85, 95, 0.14);
+      --warning: #f9a73d;
+      --warning-wash: rgba(249, 167, 61, 0.14);
+      --focus: #6da7ec;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0e120e;
+    --page: #0a0d09;
+    --surface: #171b16;
+    --surface-2: #12150f;
+    --ink: #f2f4ec;
+    --ink-2: #b7bdae;
+    --muted: #82887a;
+    --border: rgba(255, 255, 255, 0.10);
+    --border-strong: rgba(255, 255, 255, 0.18);
+    --grid: #262b23;
+    --baseline: #3c4237;
+    --good: #35b23f;
+    --good-wash: rgba(53, 178, 63, 0.14);
+    --critical: #e8555f;
+    --critical-wash: rgba(232, 85, 95, 0.14);
+    --warning: #f9a73d;
+    --warning-wash: rgba(249, 167, 61, 0.14);
+    --warning-ink: #f9a73d;
+    --tooltip-bg: #f2f4ec;
+    --tooltip-ink: #14180f;
+    --focus: #6da7ec;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--page);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .serif { font-family: "Source Serif 4", Georgia, "Times New Roman", serif; }
+  .mono, .num, td.num, .kpi-value, table.data td { font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .num, td.num { font-variant-numeric: tabular-nums; }
+
+  a { color: inherit; }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 24px 72px; }
+
+  /* ---- Header ---- */
+  header.top {
+    display: flex; flex-wrap: wrap; gap: 20px 32px; align-items: flex-end; justify-content: space-between;
+    padding-bottom: 20px; margin-bottom: 22px; border-bottom: 1px solid var(--border-strong);
+  }
+  .brand-block h1 {
+    font-family: "Source Serif 4", Georgia, serif; font-weight: 600; font-size: 27px; margin: 0 0 4px;
+    letter-spacing: -0.01em; text-wrap: balance;
+  }
+  .brand-block p { margin: 0; color: var(--ink-2); font-size: 13px; max-width: 46ch; }
+  .capital-control { display: flex; flex-direction: column; gap: 4px; }
+  .capital-control label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+  .cc-note { font-size: 11px; color: var(--muted); max-width: 22ch; display: block; margin-top: 2px; }
+  .capital-control .cc-row { display: flex; align-items: center; gap: 6px; }
+  .capital-control .rupee { font-family: "IBM Plex Mono", monospace; color: var(--ink-2); }
+  .capital-control input {
+    font-family: "IBM Plex Mono", monospace; font-size: 18px; font-weight: 600; width: 150px;
+    background: var(--surface); color: var(--ink); border: 1px solid var(--border-strong); border-radius: 6px;
+    padding: 7px 9px;
+  }
+  .capital-control input:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+
+  .upload-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .upload-btn {
+    position: relative; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+    background: var(--surface); border: 1px solid var(--border-strong); border-radius: 7px;
+    padding: 9px 14px; font-size: 12.5px; font-weight: 600; color: var(--ink);
+  }
+  .upload-btn:hover { border-color: var(--focus); }
+  .upload-btn input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .upload-btn .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); flex: none; }
+  .ghost-btn {
+    background: transparent; border: 1px solid var(--border); border-radius: 7px; padding: 8px 12px;
+    font-size: 12px; color: var(--ink-2); cursor: pointer; font-family: inherit;
+  }
+  .ghost-btn:hover { color: var(--critical); border-color: var(--critical); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .chip {
+    font-size: 11.5px; padding: 4px 9px; border-radius: 999px; background: var(--surface-2);
+    border: 1px solid var(--border); color: var(--ink-2); display: inline-flex; gap: 6px; align-items: center;
+  }
+  .chip .mono { color: var(--ink); }
+
+  .status-line { font-size: 12px; color: var(--ink-2); margin-top: 8px; min-height: 16px; }
+  .status-line.err { color: var(--critical); }
+  .status-line.ok { color: var(--good); }
+  .backup-row { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); align-items: center; }
+
+  /* ---- Empty state ---- */
+  .empty {
+    border: 1px dashed var(--border-strong); border-radius: 14px; padding: 64px 32px; text-align: center;
+    color: var(--ink-2); background: var(--surface-2);
+  }
+  .empty h2 { font-family: "Source Serif 4", serif; font-size: 20px; color: var(--ink); margin: 0 0 8px; }
+  .empty p { max-width: 52ch; margin: 0 auto; }
+
+  /* ---- Sections / cards ---- */
+  section { margin-top: 26px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px;
+  }
+  .card + .card { margin-top: 16px; }
+  .card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .card-head h3 { font-family: "Source Serif 4", serif; font-size: 15.5px; font-weight: 600; margin: 0; }
+  .card-head .sub { font-size: 12px; color: var(--muted); }
+  .table-toggle {
+    font-size: 11px; color: var(--ink-2); background: none; border: 1px solid var(--border); border-radius: 6px;
+    padding: 4px 9px; cursor: pointer; font-family: inherit;
+  }
+  .table-toggle:hover { border-color: var(--focus); color: var(--focus); }
+
+  .grid-2 { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 16px; align-items: start; }
+  @media (max-width: 860px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  /* ---- KPI row ---- */
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media (max-width: 860px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+  .kpi {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 15px 16px;
+  }
+  .kpi .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 7px; }
+  .kpi .kpi-value { font-size: 21px; font-weight: 600; letter-spacing: -0.01em; }
+  .kpi .delta { font-size: 12px; margin-top: 4px; }
+  .up { color: var(--good); } .down { color: var(--critical); } .flat { color: var(--muted); }
+
+  /* ---- Charts ---- */
+  .chart-svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .crosshair-line { stroke: var(--border-strong); stroke-width: 1; pointer-events: none; }
+  .tooltip {
+    position: absolute; pointer-events: none; background: var(--tooltip-bg); color: var(--tooltip-ink);
+    font-size: 11.5px; padding: 7px 10px; border-radius: 7px; line-height: 1.45; opacity: 0; transition: opacity 0.08s;
+    z-index: 5; white-space: nowrap; box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+  }
+  .tooltip .t-row { display: flex; gap: 10px; justify-content: space-between; }
+  .tooltip .t-val { font-family: "IBM Plex Mono", monospace; font-weight: 600; }
+  .tooltip .t-key { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; }
+  .chart-wrap { position: relative; }
+  .legend { display: flex; gap: 16px; font-size: 11.5px; color: var(--ink-2); margin-top: 10px; flex-wrap: wrap; }
+  .legend .lg-item { display: flex; align-items: center; gap: 6px; }
+  .legend .lg-swatch { width: 12px; height: 2px; border-radius: 1px; }
+
+  /* ---- Tables ---- */
+  table.data { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  table.data th {
+    text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted);
+    font-family: "IBM Plex Sans", sans-serif; font-weight: 600; padding: 7px 10px; border-bottom: 1px solid var(--border-strong);
+    white-space: nowrap; position: sticky; top: 0; background: var(--surface);
+  }
+  table.data td { padding: 7px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  table.data td.right, table.data th.right { text-align: right; }
+  table.data tbody tr:hover { background: var(--surface-2); }
+  .table-scroll { overflow-x: auto; max-height: 420px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
+  .table-scroll table.data { min-width: 100%; }
+  .pill { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 600; }
+  .pill.cash { background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--border); }
+  .pill.fno { background: var(--warning-wash); color: var(--warning-ink); border: 1px solid rgba(249,147,9,0.3); }
+  .search-row { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+  .search-row input {
+    flex: 1; min-width: 180px; background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 7px;
+    padding: 8px 11px; font-size: 12.5px; color: var(--ink); font-family: inherit;
+  }
+  .search-row select {
+    background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 7px; padding: 8px 11px;
+    font-size: 12.5px; color: var(--ink); font-family: inherit;
+  }
+
+  /* ---- Flags / notes ---- */
+  .flag-banner {
+    border: 1px solid rgba(249,147,9,0.4); background: var(--warning-wash); border-radius: 10px; padding: 12px 16px;
+    font-size: 12.5px; color: var(--ink); margin-bottom: 16px;
+  }
+  .flag-banner strong { color: var(--warning-ink); display: block; margin-bottom: 6px; }
+  .flag-row { display: flex; gap: 14px; align-items: flex-start; justify-content: space-between; }
+  .flag-row + .flag-row { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(249,147,9,0.25); }
+  .flag-dismiss {
+    flex: none; font-size: 11px; background: none; border: 1px solid rgba(249,147,9,0.4); border-radius: 6px;
+    padding: 4px 9px; color: var(--warning-ink); cursor: pointer; font-family: inherit; white-space: nowrap;
+  }
+  .flag-dismiss:hover { background: rgba(249,147,9,0.15); }
+  .note { font-size: 12px; color: var(--muted); margin-top: 10px; }
+
+  footer.foot { margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 11.5px; color: var(--muted); }
+
+  ::selection { background: var(--good-wash); }
+  button, input { font-family: inherit; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand-block">
+      <h1>Trade Ledger</h1>
+      <p>Realized &amp; unrealized P&amp;L tracked against a fixed capital base, built from your IIFL trade-listing and ledger exports. Upload a new pair of exports any time — data accumulates here, in this browser.</p>
+    </div>
+    <div class="capital-control">
+      <label for="capitalBase">Capital added</label>
+      <div class="cc-row">
+        <span class="rupee">₹</span>
+        <input id="capitalBase" type="number" step="1" min="0" value="800000" />
+      </div>
+      <span class="cc-note" id="capitalNote"></span>
+    </div>
+  </header>
+
+  <div class="upload-row">
+    <label class="upload-btn">
+      <span class="dot"></span> Upload trade listing (.xls/.xlsx)
+      <input id="fileTrades" type="file" accept=".xls,.xlsx" />
+    </label>
+    <label class="upload-btn">
+      <span class="dot"></span> Upload ledger (.xls/.xlsx)
+      <input id="fileLedger" type="file" accept=".xls,.xlsx" />
+    </label>
+    <button class="ghost-btn" id="btnReset" type="button">Clear all stored data</button>
+  </div>
+  <div class="status-line" id="statusLine"></div>
+  <div class="chips" id="uploadChips"></div>
+
+  <div class="upload-row backup-row">
+    <button class="ghost-btn" id="btnExportBackup" type="button">↓ Download backup (.json)</button>
+    <label class="ghost-btn" style="position:relative;">
+      ↑ Restore from backup (.json)
+      <input id="fileBackup" type="file" accept=".json" style="position:absolute; inset:0; opacity:0; cursor:pointer;" />
+    </label>
+    <span class="note" style="margin-top:0;">Everything here lives only in this browser. Download a backup before switching browsers or devices, or just to be safe — restoring merges it back in, it won't duplicate or overwrite what's already loaded.</span>
+  </div>
+
+  <div id="emptyState" class="empty" style="margin-top:26px;">
+    <h2>No trades loaded yet</h2>
+    <p>Upload an IIFL trade-listing export and a ledger export to build your equity curve. Every future statement you upload is added to what's already here — nothing is overwritten.</p>
+  </div>
+
+  <div id="app" style="display:none;">
+
+    <div id="flagBanner"></div>
+
+    <section class="kpi-row" id="kpiRow"></section>
+
+    <section class="card">
+      <div class="card-head">
+        <div>
+          <h3>Equity vs. capital base</h3>
+          <div class="sub" id="equitySub"></div>
+        </div>
+        <button class="table-toggle" data-target="equityTable">View as table</button>
+      </div>
+      <div class="chart-wrap" id="equityChartWrap"></div>
+      <div class="legend">
+        <span class="lg-item"><span class="lg-swatch" style="background:var(--ink-2)"></span> Capital base</span>
+        <span class="lg-item"><span class="lg-swatch" style="background:var(--good)"></span> Equity above base</span>
+        <span class="lg-item"><span class="lg-swatch" style="background:var(--critical)"></span> Equity below base</span>
+      </div>
+      <div class="table-scroll" id="equityTable" style="display:none; margin-top:12px;"></div>
+      <p class="note">Shows cumulative <em>realized</em> P&amp;L day by day. Unrealized P&amp;L (mark-to-market on positions still open) is only known as of your latest upload and is layered on as the final point — the curve does not show its day-to-day history.</p>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <div>
+          <h3>Drawdown from peak</h3>
+          <div class="sub" id="ddSub"></div>
+        </div>
+        <button class="table-toggle" data-target="ddTable">View as table</button>
+      </div>
+      <div class="chart-wrap" id="ddChartWrap"></div>
+      <div class="table-scroll" id="ddTable" style="display:none; margin-top:12px;"></div>
+    </section>
+
+    <section class="grid-2">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h3>Open positions</h3>
+            <div class="sub" id="openSub"></div>
+          </div>
+        </div>
+        <div class="table-scroll" id="openPositionsTable"></div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h3>P&amp;L by segment</h3>
+            <div class="sub">Realized, this period</div>
+          </div>
+          <button class="table-toggle" data-target="segTable">View as table</button>
+        </div>
+        <div class="chart-wrap" id="segChartWrap"></div>
+        <div class="table-scroll" id="segTable" style="display:none; margin-top:12px;"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <div>
+          <h3>Ledger &amp; capital movements</h3>
+          <div class="sub">Reference only — P&amp;L above comes from the trade listing, not from ledger bills</div>
+        </div>
+      </div>
+      <div id="ledgerPanel"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <div>
+          <h3>Trade log</h3>
+          <div class="sub" id="logSub"></div>
+        </div>
+      </div>
+      <div class="search-row">
+        <input id="logSearch" type="text" placeholder="Search instrument…" />
+        <select id="logSegFilter">
+          <option value="ALL">All segments</option>
+          <option value="CASH">Cash</option>
+          <option value="FNO">F&amp;O</option>
+          <option value="MCX">MCX</option>
+        </select>
+      </div>
+      <div class="table-scroll" id="tradeLogTable"></div>
+    </section>
+
+  </div>
+
+  <footer class="foot">
+    Parsed and computed entirely in this browser — your statements are never uploaded anywhere. Position P&amp;L uses weighted-average cost, processing each day's buy leg before its sell leg (same-day intraday sequencing isn't in the broker export).
+  </footer>
+
+</div>
+
+<script>
+"use strict";
+
+/* ============================== PARSING ============================== */
+// Mirrors the tested Node parser (SheetJS, same library) — verified against
+// the real IIFL export format before being ported here.
+
+function sheetToRows(workbook) {
+  const sheetName = workbook.SheetNames[0];
+  const ws = workbook.Sheets[sheetName];
+  return XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: null });
+}
+
+function parseTradeListing(workbook) {
+  const rows = sheetToRows(workbook);
+  let headerIdx = -1;
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i].map((c) => (c == null ? "" : String(c).trim()));
+    if (row.includes("Exchange") && row.some((c) => c.startsWith("Trade Date"))) { headerIdx = i; break; }
+  }
+  if (headerIdx === -1) throw new Error("Could not find the trade-listing header row (expected columns like Exchange / Trade Date / Code).");
+
+  let clientName = null, statementDate = null;
+  for (let i = 0; i < headerIdx; i++) {
+    for (const cell of rows[i]) {
+      if (typeof cell === "string") {
+        const m1 = cell.match(/Client Name:\s*(.+)/i); if (m1) clientName = m1[1].trim();
+        const m2 = cell.match(/Statement Date:\s*(.+)/i); if (m2) statementDate = m2[1].trim();
+      }
+    }
+  }
+
+  const header = rows[headerIdx];
+  const idx = {};
+  header.forEach((h, i) => { if (h == null) return; const key = String(h).trim(); if (key) idx[key] = i; });
+  const num = (v) => (v == null || v === "" ? 0 : Number(v) || 0);
+  const closeKey = Object.keys(idx).find((k) => k.startsWith("Closing Price"));
+  const closeValKey = Object.keys(idx).find((k) => k.startsWith("Closing Value"));
+
+  const trades = [];
+  for (let i = headerIdx + 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r || r[idx["Exchange"]] == null || String(r[idx["Exchange"]]).trim() === "") continue;
+    const exchange = String(r[idx["Exchange"]]).trim();
+    if (exchange === "Exchange") continue;
+    trades.push({
+      exchange, tradeDate: r[idx["Trade Date"]],
+      code: r[idx["Code"]] != null ? String(r[idx["Code"]]).trim() : "",
+      name: r[idx["Name"]] != null ? String(r[idx["Name"]]).trim() : "",
+      expiryDate: r[idx["Expiry Date"]] || null,
+      strikePrice: num(r[idx["Strike Price"]]),
+      optionType: r[idx["Option Type"]] || null,
+      buyQty: num(r[idx["Buy Qty"]]), buyNetRate: num(r[idx["Buy Net Rate"]]), buyAmt: num(r[idx["Buy Amt"]]),
+      buyMktRate: num(r[idx["Buy Market Rate"]]), buyBrokerage: num(r[idx["Buy Brokerage"]]),
+      sellQty: num(r[idx["Sell Qty"]]), sellNetRate: num(r[idx["Sell Net Rate"]]), sellAmt: num(r[idx["Sell Amt"]]),
+      sellMktRate: num(r[idx["Sell Market Rate"]]), sellBrokerage: num(r[idx["Sell Brokerage"]]),
+      netQty: num(r[idx["Net Qty"]]), netValue: num(r[idx["Net Value"]]),
+      closingPrice: closeKey ? num(r[idx[closeKey]]) : 0,
+      closingValue: closeValKey ? num(r[idx[closeValKey]]) : 0,
+    });
+  }
+  return { clientName, statementDate, trades };
+}
+
+function parseBalance(raw) {
+  if (raw == null) return null;
+  const s = String(raw).trim();
+  const m = s.match(/(-?[\d,.]+)\s*(Cr|Dr)?/i);
+  if (!m) return null;
+  let v = parseFloat(m[1].replace(/,/g, ""));
+  if (m[2] && m[2].toLowerCase() === "dr") v = -v;
+  return v;
+}
+
+function parseLedger(workbook) {
+  const rows = sheetToRows(workbook);
+  let headerIdx = -1;
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i].map((c) => (c == null ? "" : String(c).trim()));
+    if (row.includes("Date") && row.includes("Particulars") && row.includes("Balance")) { headerIdx = i; break; }
+  }
+  if (headerIdx === -1) throw new Error("Could not find the ledger header row (expected columns like Date / Particulars / Balance).");
+
+  const header = rows[headerIdx];
+  const idx = {};
+  header.forEach((h, i) => { if (h == null) return; const key = String(h).trim(); if (key && !(key in idx)) idx[key] = i; });
+
+  const num = (v) => (v == null || v === "" ? null : Number(v));
+  const entries = [];
+  let openingBalance = null;
+  for (let i = headerIdx + 1; i < rows.length; i++) {
+    const r = rows[i];
+    const particulars = r[idx["Particulars"]];
+    const dateVal = r[idx["Date"]];
+    if (particulars && String(particulars).trim() === "Opening Balance") { openingBalance = parseBalance(r[idx["Balance"]]); continue; }
+    if (!dateVal) continue;
+    if (String(dateVal).trim() === "Date") continue;
+    entries.push({
+      date: String(dateVal).trim(),
+      particulars: particulars != null ? String(particulars).trim() : "",
+      voucher: r[idx["Voucher"]] != null ? String(r[idx["Voucher"]]).trim() : "",
+      debit: num(r[idx["Debit"]]), credit: num(r[idx["Credit"]]),
+      balance: parseBalance(r[idx["Balance"]]),
+      invoiceNo: r[idx["InvoiceNo"]] != null ? String(r[idx["InvoiceNo"]]).trim() : "",
+    });
+  }
+  return { openingBalance, entries };
+}
+
+/* ============================== ENGINE ============================== */
+// Weighted-average-cost position engine — identical logic to the
+// independently cross-checked Node + Python versions used to validate this
+// tool before shipping.
+
+function toDateTL(s) { const [d, m, y] = String(s).split("/").map(Number); return new Date(y, m - 1, d).getTime(); }
+
+function instrumentKey(t) {
+  const seg = t.exchange.includes("CASH") ? "CASH" : "DERIV";
+  if (seg === "CASH") return `CASH|${t.name || t.code}`;
+  return `${t.exchange}|${t.code}|${t.expiryDate || ""}|${t.strikePrice || ""}|${t.optionType || ""}`;
+}
+
+function labelFor(t) {
+  if (t.exchange.includes("CASH")) return t.name || t.code;
+  const parts = [t.code];
+  if (t.expiryDate) parts.push(String(t.expiryDate));
+  if (t.strikePrice) parts.push(String(t.strikePrice));
+  if (t.optionType) parts.push(t.optionType);
+  return parts.join(" ");
+}
+
+function median(arr) {
+  if (!arr.length) return null;
+  const s = arr.slice().sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+}
+
+function runEngine(trades) {
+  const sorted = trades.slice().sort((a, b) => toDateTL(a.tradeDate) - toDateTL(b.tradeDate));
+  const positions = {};
+  const dailyRealized = {};
+  const tradeLog = [];
+  const closingEvents = [];
+
+  // Baseline "normal" brokerage rate for cash-equity legs in this data set, so a
+  // trade whose per-unit charge is way outside that norm can be told apart from
+  // an ordinary buy/sell — e.g. an exchange auction close-out (a failed-delivery
+  // short getting bought in) typically shows up with a much steeper charge than
+  // this broker's usual cash brokerage.
+  const cashRatios = [];
+  for (const t of sorted) {
+    if (!t.exchange.includes("CASH")) continue;
+    if (t.buyQty && t.buyMktRate) cashRatios.push(t.buyBrokerage / t.buyMktRate);
+    if (t.sellQty && t.sellMktRate) cashRatios.push(t.sellBrokerage / t.sellMktRate);
+  }
+  const normalBrokerageRate = median(cashRatios);
+
+  function applyExec(key, qtyDelta, price, t) {
+    let pos = positions[key];
+    if (!pos) {
+      const segment = t.exchange.includes("CASH") ? "CASH" : (t.exchange === "MCX" ? "MCX" : "FNO");
+      pos = positions[key] = {
+        qty: 0, avgPrice: 0, realized: 0, segment,
+        exchange: t.exchange, label: labelFor(t), lastClose: t.closingPrice || 0, lastDate: t.tradeDate,
+        // A CASH position whose very first touch in this data set is a SELL means
+        // either (a) the shares were bought in an earlier period this export
+        // doesn't cover, or (b) it was a short sale — sold without holding — that
+        // got covered later. Case (a) makes the realized number below a guess;
+        // case (b) makes it a real, correctly-computed loss/gain. auctionSignal
+        // (set below, once we see the leg that closes it) tells the two apart.
+        preExistingGuess: segment === "CASH" && qtyDelta < 0,
+        auctionSignal: false,
+      };
+    }
+    let realized = 0;
+    if (pos.qty === 0 || Math.sign(pos.qty) === Math.sign(qtyDelta)) {
+      const newQty = pos.qty + qtyDelta;
+      pos.avgPrice = (Math.abs(pos.qty) * pos.avgPrice + Math.abs(qtyDelta) * price) / Math.abs(newQty);
+      pos.qty = newQty;
+    } else {
+      const closingQty = Math.min(Math.abs(qtyDelta), Math.abs(pos.qty));
+      realized = pos.qty > 0 ? closingQty * (price - pos.avgPrice) : closingQty * (pos.avgPrice - price);
+      const remainder = Math.abs(qtyDelta) - closingQty;
+      pos.qty = pos.qty + qtyDelta;
+      pos.realized += realized;
+      if (remainder > 0) pos.avgPrice = price;
+      if (pos.preExistingGuess && normalBrokerageRate) {
+        const mktRate = qtyDelta > 0 ? t.buyMktRate : t.sellMktRate;
+        const brokerage = qtyDelta > 0 ? t.buyBrokerage : t.sellBrokerage;
+        if (mktRate) {
+          const ratio = brokerage / mktRate;
+          if (ratio > Math.max(normalBrokerageRate * 2.5, 0.004)) pos.auctionSignal = true;
+        }
+      }
+      closingEvents.push({ date: t.tradeDate, key, label: labelFor(t), segment: pos.segment, closingQty, realizedPnL: realized, provisional: !!pos.preExistingGuess && !pos.auctionSignal });
+    }
+    return realized;
+  }
+
+  for (const t of sorted) {
+    const key = instrumentKey(t);
+    let dayRealized = 0;
+    if (t.buyQty) dayRealized += applyExec(key, t.buyQty, t.buyNetRate, t);
+    if (t.sellQty) dayRealized += applyExec(key, -t.sellQty, t.sellNetRate, t);
+    if (positions[key]) { positions[key].lastClose = t.closingPrice || positions[key].lastClose; positions[key].lastDate = t.tradeDate; }
+    dailyRealized[t.tradeDate] = (dailyRealized[t.tradeDate] || 0) + dayRealized;
+    tradeLog.push({ date: t.tradeDate, key, label: labelFor(t), exchange: t.exchange, segment: (t.exchange.includes("CASH") ? "CASH" : (t.exchange === "MCX" ? "MCX" : "FNO")),
+      buyQty: t.buyQty, sellQty: t.sellQty, buyNetRate: t.buyNetRate, sellNetRate: t.sellNetRate, realizedPnL: dayRealized });
+  }
+
+  // Data-quality guard: flag any open derivative position whose reported closing
+  // price is wildly out of line with its own traded prices (seen in the wild —
+  // an expired contract's closing-price field populated with the underlying
+  // index level instead of the contract premium).
+  const flags = [];
+  let totalRealized = 0, totalUnrealized = 0, provisionalRealized = 0, excludedUnrealizedCount = 0;
+  const openPositions = [];
+  for (const [key, pos] of Object.entries(positions)) {
+    totalRealized += pos.realized;
+    if (pos.preExistingGuess && pos.realized) {
+      const amt = `${pos.realized < 0 ? "−" : "+"}₹${Math.abs(pos.realized).toLocaleString("en-IN")}`;
+      if (pos.auctionSignal) {
+        flags.push({ id: `likely-auction:${key}`, type: "likely-auction", message: `"${pos.label}" (CASH) was first sold in this data set with no prior buy in it, and the trade that later closed it out carries a much steeper per-unit charge than this file's ordinary cash trades — the signature of an exchange auction (a failed-delivery short getting bought in), not an ordinary re-purchase. If that's what happened, the realized P&L here (${amt}) is a real result, not a guess.` });
+      } else {
+        provisionalRealized += pos.realized;
+        flags.push({ id: `provisional-realized:${key}`, type: "provisional-realized", message: `"${pos.label}" (CASH) was first sold in this data set with no prior buy in it — most likely a holding from before this export's window, since nothing about how it was closed out looks like an auction. Its realized P&L here (${amt}) is calculated as if the position started at zero and is likely wrong; it'll self-correct once you upload the statement covering when it was actually bought.` });
+      }
+    }
+    if (Math.abs(pos.qty) > 1e-9) {
+      let suspicious = false, ratio = null;
+      if (pos.segment !== "CASH" && pos.avgPrice > 0) {
+        ratio = pos.lastClose / pos.avgPrice;
+        if (ratio > 25 || ratio < 0.04) suspicious = true;
+      }
+      const unrealized = pos.qty > 0 ? pos.qty * (pos.lastClose - pos.avgPrice) : Math.abs(pos.qty) * (pos.avgPrice - pos.lastClose);
+      const entry = { key, ...pos, unrealizedPnL: unrealized, suspicious };
+      openPositions.push(entry);
+      if (suspicious) {
+        excludedUnrealizedCount++;
+        flags.push({ id: `suspicious-close:${key}`, type: "suspicious-close", message: `"${pos.label}" (${pos.segment}) shows a closing price of ${pos.lastClose.toLocaleString("en-IN")} against an average trade price of ${pos.avgPrice.toFixed(2)} — that's a ${ratio.toFixed(0)}× gap, most likely a bad closing-price field in the export (e.g. an index level where a contract premium was expected). Its unrealized P&L is excluded from the totals below — check it manually.` });
+      } else {
+        totalUnrealized += unrealized;
+      }
+    }
+  }
+
+  const dates = [...new Set(sorted.map((t) => t.tradeDate))].sort((a, b) => toDateTL(a) - toDateTL(b));
+  let cum = 0;
+  const equityCurve = dates.map((d) => { cum += dailyRealized[d] || 0; return { date: d, cumRealized: cum }; });
+
+  const wins = closingEvents.filter((e) => e.realizedPnL > 0);
+  const losses = closingEvents.filter((e) => e.realizedPnL < 0);
+  const winRate = closingEvents.length ? wins.length / closingEvents.length : 0;
+  const avgWin = wins.length ? wins.reduce((s, e) => s + e.realizedPnL, 0) / wins.length : 0;
+  const avgLoss = losses.length ? losses.reduce((s, e) => s + e.realizedPnL, 0) / losses.length : 0;
+
+  return { totalRealized, totalUnrealized, provisionalRealized, excludedUnrealizedCount, openPositions, tradeLog, equityCurve, dailyRealized,
+    closingEvents, winRate, avgWin, avgLoss, winCount: wins.length, lossCount: losses.length, flags,
+    firstDate: dates[0] || null, lastDate: dates[dates.length - 1] || null, dates };
+}
+
+/* ============================== STORAGE ============================== */
+const LS_TRADES = "stwp-journal-trades-v1";
+const LS_LEDGER = "stwp-journal-ledger-v1";
+const LS_CAPITAL = "stwp-journal-capitalbase-v1";
+const LS_UPLOADS = "stwp-journal-uploads-v1";
+const LS_LEDGER_OPENING = "stwp-journal-ledger-opening-v1";
+const LS_DISMISSED_FLAGS = "stwp-journal-dismissed-flags-v1";
+
+function safeGet(key, fallback) {
+  try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
+  catch (e) { return fallback; }
+}
+function safeSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) { /* storage unavailable */ } }
+
+function tradeId(t) {
+  return [t.exchange, t.tradeDate, t.code, t.expiryDate, t.strikePrice, t.optionType, t.buyQty, t.buyNetRate, t.sellQty, t.sellNetRate].join("|");
+}
+function ledgerId(e) { return e.voucher ? `${e.date}|${e.voucher}` : `${e.date}|${e.particulars}|${e.debit}|${e.credit}|${e.balance}`; }
+
+function mergeTrades(existing, incoming) {
+  const byId = new Map(existing.map((t) => [tradeId(t), t]));
+  let added = 0;
+  for (const t of incoming) { const id = tradeId(t); if (!byId.has(id)) { byId.set(id, t); added++; } }
+  return { merged: [...byId.values()], added };
+}
+function mergeLedger(existing, incoming) {
+  const byId = new Map(existing.map((e) => [ledgerId(e), e]));
+  let added = 0;
+  for (const e of incoming) { const id = ledgerId(e); if (!byId.has(id)) { byId.set(id, e); added++; } }
+  return { merged: [...byId.values()], added };
+}
+
+/* ============================== FORMATTING ============================== */
+function inr(n, opts) {
+  opts = opts || {};
+  const sign = n < 0 ? "−" : (opts.forceSign ? "+" : "");
+  const abs = Math.abs(n);
+  const str = abs.toLocaleString("en-IN", { maximumFractionDigits: opts.decimals || 0, minimumFractionDigits: opts.decimals || 0 });
+  return `${sign}₹${str}`;
+}
+function pct(n, decimals) { const d = decimals == null ? 1 : decimals; const sign = n < 0 ? "−" : "+"; return `${sign}${Math.abs(n).toFixed(d)}%`; }
+function escapeHtml(s) { const d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
+
+/* ============================== CHART HELPERS (plain SVG) ============================== */
+const NS = "http://www.w3.org/2000/svg";
+function svgEl(tag, attrs) {
+  const el = document.createElementNS(NS, tag);
+  for (const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+function niceTicks(min, max, count) {
+  if (min === max) { min -= 1; max += 1; }
+  const span = max - min;
+  const step0 = span / count;
+  const mag = Math.pow(10, Math.floor(Math.log10(step0)));
+  const norm = step0 / mag;
+  let step;
+  if (norm < 1.5) step = 1 * mag; else if (norm < 3) step = 2 * mag; else if (norm < 7) step = 5 * mag; else step = 10 * mag;
+  const niceMin = Math.floor(min / step) * step;
+  const niceMax = Math.ceil(max / step) * step;
+  const ticks = [];
+  for (let v = niceMin; v <= niceMax + step * 0.001; v += step) ticks.push(Math.round(v * 1000) / 1000);
+  return ticks;
+}
+function compactInr(n) {
+  const abs = Math.abs(n);
+  let s;
+  if (abs >= 1e7) s = (n / 1e7).toFixed(abs >= 1e8 ? 0 : 1) + "Cr";
+  else if (abs >= 1e5) s = (n / 1e5).toFixed(abs >= 1e6 ? 0 : 1) + "L";
+  else if (abs >= 1e3) s = (n / 1e3).toFixed(abs >= 1e4 ? 0 : 1) + "k";
+  else s = n.toFixed(0);
+  return s;
+}
+
+// Line chart: equity vs flat baseline, area wash colored by sign relative to baseline.
+function makeEquityChart(container, points, baseline, opts) {
+  opts = opts || {};
+  container.innerHTML = "";
+  const width = 1040, height = opts.height || 260;
+  const margin = { top: 16, right: 18, bottom: 26, left: 54 };
+  const innerW = width - margin.left - margin.right, innerH = height - margin.top - margin.bottom;
+
+  const ys = points.map((p) => p.y).concat([baseline]);
+  const yMin = Math.min(...ys), yMax = Math.max(...ys);
+  const pad = (yMax - yMin) * 0.12 || Math.abs(baseline) * 0.05 || 1000;
+  const ticks = niceTicks(yMin - pad, yMax + pad, 5);
+  const domainMin = ticks[0], domainMax = ticks[ticks.length - 1];
+
+  const x = (i) => margin.left + (points.length <= 1 ? innerW / 2 : (i / (points.length - 1)) * innerW);
+  const y = (v) => margin.top + innerH - ((v - domainMin) / (domainMax - domainMin)) * innerH;
+
+  const svg = svgEl("svg", { viewBox: `0 0 ${width} ${height}`, class: "chart-svg", role: "img", "aria-label": opts.ariaLabel || "Chart" });
+
+  // gridlines + y ticks
+  ticks.forEach((t) => {
+    svg.appendChild(svgEl("line", { x1: margin.left, x2: width - margin.right, y1: y(t), y2: y(t), stroke: "var(--grid)", "stroke-width": 1 }));
+    const lbl = svgEl("text", { x: margin.left - 8, y: y(t) + 3.5, "text-anchor": "end", "font-size": 10.5, fill: "var(--muted)", "font-family": "IBM Plex Mono, monospace" });
+    lbl.textContent = compactInr(t);
+    svg.appendChild(lbl);
+  });
+
+  // baseline (solid, muted — the capital base)
+  const by = y(baseline);
+  svg.appendChild(svgEl("line", { x1: margin.left, x2: width - margin.right, y1: by, y2: by, stroke: "var(--baseline)", "stroke-width": 1.25 }));
+
+  // area path split by sign relative to baseline, and line path
+  let areaAbove = `M ${x(0)} ${by}`, areaBelow = `M ${x(0)} ${by}`, linePath = `M ${x(0)} ${y(points[0].y)}`;
+  points.forEach((p, i) => {
+    const px = x(i), py = y(p.y);
+    areaAbove += ` L ${px} ${py}`;
+    areaBelow += ` L ${px} ${py}`;
+    if (i > 0) linePath += ` L ${px} ${py}`;
+  });
+  areaAbove += ` L ${x(points.length - 1)} ${by} Z`;
+  areaBelow += ` L ${x(points.length - 1)} ${by} Z`;
+
+  const clipAboveId = "clipAbove" + Math.random().toString(36).slice(2);
+  const clipBelowId = "clipBelow" + Math.random().toString(36).slice(2);
+  const defs = svgEl("defs", {});
+  const clipAbove = svgEl("clipPath", { id: clipAboveId });
+  clipAbove.appendChild(svgEl("rect", { x: margin.left, y: margin.top, width: innerW, height: Math.max(0, by - margin.top) }));
+  const clipBelow = svgEl("clipPath", { id: clipBelowId });
+  clipBelow.appendChild(svgEl("rect", { x: margin.left, y: by, width: innerW, height: Math.max(0, margin.top + innerH - by) }));
+  defs.appendChild(clipAbove); defs.appendChild(clipBelow);
+  svg.appendChild(defs);
+
+  const areaAboveEl = svgEl("path", { d: areaAbove, fill: "var(--good)", opacity: 0.10, "clip-path": `url(#${clipAboveId})` });
+  const areaBelowEl = svgEl("path", { d: areaBelow, fill: "var(--critical)", opacity: 0.10, "clip-path": `url(#${clipBelowId})` });
+  svg.appendChild(areaAboveEl); svg.appendChild(areaBelowEl);
+
+  svg.appendChild(svgEl("path", { d: linePath, fill: "none", stroke: "var(--ink)", "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+
+  // x-axis labels (sparse)
+  const labelEvery = Math.max(1, Math.ceil(points.length / 7));
+  points.forEach((p, i) => {
+    if (i % labelEvery !== 0 && i !== points.length - 1) return;
+    const lbl = svgEl("text", { x: x(i), y: height - 6, "text-anchor": "middle", "font-size": 10, fill: "var(--muted)" });
+    lbl.textContent = p.date.slice(0, 5);
+    svg.appendChild(lbl);
+  });
+
+  // endpoint marker
+  const lastI = points.length - 1;
+  const endColor = points[lastI].y >= baseline ? "var(--good)" : "var(--critical)";
+  svg.appendChild(svgEl("circle", { cx: x(lastI), cy: y(points[lastI].y), r: 4, fill: endColor, stroke: "var(--surface)", "stroke-width": 2 }));
+
+  // hover layer
+  const hitW = innerW / Math.max(1, points.length - 1);
+  const crosshair = svgEl("line", { class: "crosshair-line", x1: 0, x2: 0, y1: margin.top, y2: margin.top + innerH, opacity: 0 });
+  svg.appendChild(crosshair);
+  const hoverDot = svgEl("circle", { r: 4.5, fill: "var(--ink)", stroke: "var(--surface)", "stroke-width": 2, opacity: 0 });
+  svg.appendChild(hoverDot);
+
+  const tooltip = document.createElement("div");
+  tooltip.className = "tooltip";
+  container.style.position = "relative";
+
+  const hitArea = svgEl("rect", { x: margin.left, y: margin.top, width: innerW, height: innerH, fill: "transparent" });
+  svg.appendChild(hitArea);
+
+  function showAt(i) {
+    const p = points[i];
+    const px = x(i), py = y(p.y);
+    crosshair.setAttribute("x1", px); crosshair.setAttribute("x2", px); crosshair.setAttribute("opacity", 1);
+    hoverDot.setAttribute("cx", px); hoverDot.setAttribute("cy", py); hoverDot.setAttribute("opacity", 1);
+    const diff = p.y - baseline;
+    const diffColor = diff >= 0 ? "var(--good)" : "var(--critical)";
+    tooltip.innerHTML = `<div style="font-weight:600;margin-bottom:4px;">${escapeHtml(formatTradeDate(p.date))}</div>
+      <div class="t-row"><span>Equity</span><span class="t-val">${escapeHtml(inr(p.y))}</span></div>
+      <div class="t-row" style="color:${diffColor}"><span>vs capital</span><span class="t-val">${escapeHtml(inr(diff, { forceSign: true }))}</span></div>`;
+    tooltip.style.opacity = 1;
+    const bbox = container.getBoundingClientRect();
+    const relX = (px / width) * bbox.width;
+    tooltip.style.left = Math.min(Math.max(relX + 12, 0), bbox.width - 190) + "px";
+    tooltip.style.top = "4px";
+  }
+  function hide() { crosshair.setAttribute("opacity", 0); hoverDot.setAttribute("opacity", 0); tooltip.style.opacity = 0; }
+  hitArea.addEventListener("pointermove", (e) => {
+    const bbox = svg.getBoundingClientRect();
+    const relX = ((e.clientX - bbox.left) / bbox.width) * width;
+    let i = Math.round(((relX - margin.left) / innerW) * (points.length - 1));
+    i = Math.max(0, Math.min(points.length - 1, i));
+    showAt(i);
+  });
+  hitArea.addEventListener("pointerleave", hide);
+  hitArea.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
+
+  container.appendChild(svg);
+  container.appendChild(tooltip);
+  return svg;
+}
+function formatTradeDate(d) {
+  if (!d) return "";
+  const parts = String(d).split("/");
+  if (parts.length !== 3) return d;
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const day = parseInt(parts[0], 10), mon = parseInt(parts[1], 10) - 1, yr = parts[2];
+  return `${day} ${months[mon] || ""} ${yr.length === 2 ? "20" + yr : yr}`;
+}
+
+// Compact area chart for drawdown (single hue, magnitude away from peak).
+function makeDrawdownChart(container, points) {
+  container.innerHTML = "";
+  const width = 1040, height = 130;
+  const margin = { top: 10, right: 18, bottom: 24, left: 54 };
+  const innerW = width - margin.left - margin.right, innerH = height - margin.top - margin.bottom;
+  const minV = Math.min(0, ...points.map((p) => p.y));
+  const ticks = niceTicks(minV, 0, 3);
+  const domainMin = ticks[0], domainMax = 0;
+  const x = (i) => margin.left + (points.length <= 1 ? innerW / 2 : (i / (points.length - 1)) * innerW);
+  const y = (v) => margin.top + innerH - ((v - domainMin) / (domainMax - domainMin || 1)) * innerH;
+
+  const svg = svgEl("svg", { viewBox: `0 0 ${width} ${height}`, class: "chart-svg", role: "img", "aria-label": "Drawdown from peak equity" });
+  ticks.forEach((t) => {
+    svg.appendChild(svgEl("line", { x1: margin.left, x2: width - margin.right, y1: y(t), y2: y(t), stroke: "var(--grid)", "stroke-width": 1 }));
+    const lbl = svgEl("text", { x: margin.left - 8, y: y(t) + 3.5, "text-anchor": "end", "font-size": 10.5, fill: "var(--muted)", "font-family": "IBM Plex Mono, monospace" });
+    lbl.textContent = compactInr(t); svg.appendChild(lbl);
+  });
+  const zero = y(0);
+  svg.appendChild(svgEl("line", { x1: margin.left, x2: width - margin.right, y1: zero, y2: zero, stroke: "var(--baseline)", "stroke-width": 1.25 }));
+
+  let area = `M ${x(0)} ${zero}`, line = `M ${x(0)} ${y(points[0].y)}`;
+  points.forEach((p, i) => { const px = x(i), py = y(p.y); area += ` L ${px} ${py}`; if (i > 0) line += ` L ${px} ${py}`; });
+  area += ` L ${x(points.length - 1)} ${zero} Z`;
+  svg.appendChild(svgEl("path", { d: area, fill: "var(--critical)", opacity: 0.12 }));
+  svg.appendChild(svgEl("path", { d: line, fill: "none", stroke: "var(--critical)", "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+
+  const labelEvery = Math.max(1, Math.ceil(points.length / 7));
+  points.forEach((p, i) => {
+    if (i % labelEvery !== 0 && i !== points.length - 1) return;
+    const lbl = svgEl("text", { x: x(i), y: height - 6, "text-anchor": "middle", "font-size": 10, fill: "var(--muted)" });
+    lbl.textContent = p.date.slice(0, 5); svg.appendChild(lbl);
+  });
+  container.appendChild(svg);
+}
+
+// Horizontal diverging bar chart (P&L by segment/instrument).
+function makeBarChart(container, data, opts) {
+  opts = opts || {};
+  container.innerHTML = "";
+  const rowH = 26, gap = 8;
+  const width = container.clientWidth || 1040;
+  const margin = { top: 8, right: 60, bottom: 8, left: opts.labelWidth || 120 };
+  const height = margin.top + margin.bottom + data.length * (rowH + gap) - gap;
+  const innerW = width - margin.left - margin.right;
+  const maxAbs = Math.max(1, ...data.map((d) => Math.abs(d.value)));
+  const zeroX = margin.left + innerW / 2;
+  const scale = (v) => (v / maxAbs) * (innerW / 2 - 4);
+
+  const svg = svgEl("svg", { viewBox: `0 0 ${width} ${height}`, class: "chart-svg", role: "img", "aria-label": opts.ariaLabel || "Bar chart" });
+  svg.appendChild(svgEl("line", { x1: zeroX, x2: zeroX, y1: margin.top, y2: height - margin.bottom, stroke: "var(--baseline)", "stroke-width": 1.25 }));
+
+  const tooltip = document.createElement("div");
+  tooltip.className = "tooltip";
+  container.style.position = "relative";
+
+  data.forEach((d, i) => {
+    const rowY = margin.top + i * (rowH + gap);
+    const w = scale(d.value);
+    const barX = w >= 0 ? zeroX : zeroX + w;
+    const barW = Math.abs(w);
+    const color = d.value >= 0 ? "var(--good)" : "var(--critical)";
+    const label = svgEl("text", { x: margin.left - 10, y: rowY + rowH / 2 + 4, "text-anchor": "end", "font-size": 11.5, fill: "var(--ink-2)" });
+    label.textContent = d.label; svg.appendChild(label);
+
+    const bar = svgEl("rect", { x: barX, y: rowY + 3, width: Math.max(barW, 1.5), height: rowH - 6, rx: 3, fill: color, opacity: 0.85 });
+    svg.appendChild(bar);
+
+    const estLabelW = compactInr(d.value).length * 7 + 4;
+    const outerSpace = w >= 0 ? (width - margin.right) - (barX + barW) : barX - margin.left;
+    const fitsOutside = outerSpace >= estLabelW + 8;
+    const valLbl = svgEl("text", { y: rowY + rowH / 2 + 4, "font-size": 11, "font-family": "IBM Plex Mono, monospace" });
+    if (fitsOutside) {
+      valLbl.setAttribute("x", w >= 0 ? barX + barW + 8 : barX - 8);
+      valLbl.setAttribute("text-anchor", w >= 0 ? "start" : "end");
+      valLbl.setAttribute("fill", "var(--ink)");
+    } else {
+      // not enough room outside the bar — set the value inside, near its outer edge, in white
+      valLbl.setAttribute("x", w >= 0 ? barX + barW - 8 : barX + 8);
+      valLbl.setAttribute("text-anchor", w >= 0 ? "end" : "start");
+      valLbl.setAttribute("fill", "#fff");
+    }
+    valLbl.textContent = compactInr(d.value); svg.appendChild(valLbl);
+
+    const hit = svgEl("rect", { x: margin.left, y: rowY, width: innerW, height: rowH, fill: "transparent" });
+    hit.style.cursor = "pointer";
+    hit.addEventListener("pointerenter", () => { bar.setAttribute("opacity", 1); tooltip.innerHTML = `<div style="font-weight:600;margin-bottom:2px;">${escapeHtml(d.label)}</div><div class="t-val">${escapeHtml(inr(d.value, { forceSign: true }))}</div>`; tooltip.style.opacity = 1; tooltip.style.left = Math.min(Math.max(barX, 0), container.clientWidth - 160) + "px"; tooltip.style.top = rowY + "px"; });
+    hit.addEventListener("pointerleave", () => { bar.setAttribute("opacity", 0.85); tooltip.style.opacity = 0; });
+    svg.appendChild(hit);
+  });
+
+  container.appendChild(svg);
+  container.appendChild(tooltip);
+}
+
+/* ============================== RENDER ============================== */
+let state = {
+  trades: safeGet(LS_TRADES, []),
+  ledger: safeGet(LS_LEDGER, []),
+  uploads: safeGet(LS_UPLOADS, []),
+  capitalBase: safeGet(LS_CAPITAL, 800000),
+  ledgerOpening: safeGet(LS_LEDGER_OPENING, null),
+  dismissedFlags: safeGet(LS_DISMISSED_FLAGS, []),
+};
+
+// The true capital base for return/equity math is what you added PLUS whatever
+// was already sitting in the account before that (the ledger's opening
+// balance) — otherwise a pre-existing float gets silently left out of the
+// denominator. Falls back to just the added amount until a ledger is uploaded.
+function effectiveCapitalBase() { return state.capitalBase + (state.ledgerOpening || 0); }
+
+const $ = (sel) => document.querySelector(sel);
+const capitalInput = $("#capitalBase");
+capitalInput.value = state.capitalBase;
+capitalInput.addEventListener("change", () => {
+  const v = Number(capitalInput.value) || 0;
+  state.capitalBase = v; safeSet(LS_CAPITAL, v); render();
+});
+
+function setStatus(msg, kind) {
+  const el = $("#statusLine");
+  el.textContent = msg || "";
+  el.className = "status-line" + (kind ? " " + kind : "");
+}
+
+function renderChips() {
+  const wrap = $("#uploadChips");
+  wrap.innerHTML = "";
+  state.uploads.forEach((u) => {
+    const chip = document.createElement("div");
+    chip.className = "chip";
+    chip.innerHTML = `<span>${escapeHtml(u.kind)}</span><span class="mono">${escapeHtml(u.summary)}</span>`;
+    wrap.appendChild(chip);
+  });
+}
+
+function renderKPIs(engine, ledgerInfo) {
+  const capBase = effectiveCapitalBase();
+  const equity = capBase + engine.totalRealized + engine.totalUnrealized;
+  const totalPnl = engine.totalRealized + engine.totalUnrealized;
+  const returnPct = capBase ? (totalPnl / capBase) * 100 : 0;
+  const maxDD = engine.equityCurve.reduce((acc, p) => {
+    acc.peak = Math.max(acc.peak, p.cumRealized);
+    acc.maxDD = Math.min(acc.maxDD, p.cumRealized - acc.peak);
+    return acc;
+  }, { peak: 0, maxDD: 0 }).maxDD;
+
+  const tiles = [
+    { label: "Capital base", value: inr(capBase),
+      delta: state.ledgerOpening ? `${inr(state.capitalBase)} added + ${inr(state.ledgerOpening)} already in the account` : null, deltaClass: "flat" },
+    { label: "Capital remaining", value: inr(equity), delta: `${pct(returnPct)} · started with ${inr(capBase)}`, deltaClass: returnPct >= 0 ? "up" : "down" },
+    { label: "Available cash", value: ledgerInfo && ledgerInfo.balanceStr ? ledgerInfo.balanceStr : "—",
+      delta: ledgerInfo ? "ledger closing balance — actual cash sitting in the account" : "upload the ledger to see this", deltaClass: "flat" },
+    { label: "Realized P&L", value: inr(engine.totalRealized, { forceSign: true }), deltaClass: engine.totalRealized >= 0 ? "up" : "down",
+      delta: engine.provisionalRealized ? `incl. ${inr(engine.provisionalRealized, { forceSign: true })} provisional — see note above` : null },
+    { label: "Unrealized P&L", value: inr(engine.totalUnrealized, { forceSign: true }), deltaClass: engine.totalUnrealized >= 0 ? "up" : "down",
+      delta: engine.excludedUnrealizedCount ? `${engine.excludedUnrealizedCount} flagged position${engine.excludedUnrealizedCount > 1 ? "s" : ""} excluded` : null },
+    { label: "Max drawdown", value: inr(maxDD), deltaClass: "down" },
+    { label: "Win rate", value: (engine.winRate * 100).toFixed(0) + "%", delta: `${engine.winCount}W / ${engine.lossCount}L closes`, deltaClass: "flat" },
+    { label: "Avg win / avg loss", value: `${inr(engine.avgWin, {forceSign:false})} / ${inr(engine.avgLoss, {forceSign:false})}`, delta: null },
+    { label: "Open positions", value: String(engine.openPositions.length), delta: null, deltaClass: "flat" },
+  ];
+  const row = $("#kpiRow");
+  row.innerHTML = "";
+  tiles.forEach((t) => {
+    const el = document.createElement("div");
+    el.className = "kpi";
+    el.innerHTML = `<div class="label">${escapeHtml(t.label)}</div><div class="kpi-value">${t.value}</div>` +
+      (t.delta ? `<div class="delta ${t.deltaClass || "flat"}">${escapeHtml(t.delta)}</div>` : "");
+    row.appendChild(el);
+  });
+}
+
+function renderFlagBanner(engine) {
+  const el = $("#flagBanner");
+  const visible = engine.flags.filter((f) => !state.dismissedFlags.includes(f.id));
+  if (!visible.length) { el.innerHTML = ""; return; }
+  el.innerHTML = `<div class="flag-banner"><strong>Data quality</strong>` +
+    visible.map((f) => `<div class="flag-row"><span>${escapeHtml(f.message)}</span><button class="flag-dismiss" data-flag-id="${escapeHtml(f.id)}" type="button">Got it — don't show again</button></div>`).join("") +
+    `</div>`;
+}
+
+function renderEquity(engine) {
+  const capBase = effectiveCapitalBase();
+  const points = engine.equityCurve.map((p) => ({ date: p.date, y: capBase + p.cumRealized }));
+  if (engine.totalUnrealized) {
+    const last = points[points.length - 1];
+    points.push({ date: last.date, y: last.y + engine.totalUnrealized, isMTM: true });
+  }
+  makeEquityChart($("#equityChartWrap"), points, capBase, { ariaLabel: "Equity versus capital base over time" });
+  $("#equitySub").textContent = engine.firstDate ? `${formatTradeDate(engine.firstDate)} – ${formatTradeDate(engine.lastDate)}` : "";
+
+  const tbl = $("#equityTable");
+  let rows = points.map((p) => `<tr><td>${escapeHtml(formatTradeDate(p.date))}${p.isMTM ? " (incl. unrealized)" : ""}</td><td class="num right">${inr(p.y)}</td><td class="num right">${inr(p.y - capBase, { forceSign: true })}</td></tr>`).join("");
+  tbl.innerHTML = `<table class="data"><thead><tr><th>Date</th><th class="right">Equity</th><th class="right">vs. capital</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderDrawdown(engine) {
+  let peak = 0;
+  const points = engine.equityCurve.map((p) => { peak = Math.max(peak, p.cumRealized); return { date: p.date, y: p.cumRealized - peak }; });
+  makeDrawdownChart($("#ddChartWrap"), points);
+  $("#ddSub").textContent = "Off realized-P&L peak (unrealized excluded — no daily mark-to-market history in the export)";
+  const tbl = $("#ddTable");
+  let rows = points.map((p) => `<tr><td>${escapeHtml(formatTradeDate(p.date))}</td><td class="num right">${inr(p.y)}</td></tr>`).join("");
+  tbl.innerHTML = `<table class="data"><thead><tr><th>Date</th><th class="right">Drawdown</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderOpenPositions(engine) {
+  $("#openSub").textContent = `${engine.openPositions.length} instrument${engine.openPositions.length === 1 ? "" : "s"} still held`;
+  const el = $("#openPositionsTable");
+  if (!engine.openPositions.length) { el.innerHTML = `<div class="note" style="padding:14px;">No open positions — everything in this data set has been closed out.</div>`; return; }
+  const rows = engine.openPositions
+    .slice().sort((a, b) => Math.abs(b.unrealizedPnL) - Math.abs(a.unrealizedPnL))
+    .map((p) => `<tr>
+      <td>${escapeHtml(p.label)}</td>
+      <td><span class="pill ${p.segment === "CASH" ? "cash" : "fno"}">${escapeHtml(p.segment)}</span></td>
+      <td class="num right">${p.qty}</td>
+      <td class="num right">${p.avgPrice.toFixed(2)}</td>
+      <td class="num right">${p.lastClose.toFixed(2)}</td>
+      <td class="num right ${p.suspicious ? "" : (p.unrealizedPnL >= 0 ? "up" : "down")}">${p.suspicious ? "flagged" : inr(p.unrealizedPnL, { forceSign: true })}</td>
+    </tr>`).join("");
+  el.innerHTML = `<table class="data"><thead><tr><th>Instrument</th><th>Segment</th><th class="right">Qty</th><th class="right">Avg price</th><th class="right">Last close</th><th class="right">Unrealized</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderSegmentPnl(engine) {
+  const bySeg = {};
+  engine.tradeLog.forEach((t) => { bySeg[t.segment] = (bySeg[t.segment] || 0) + t.realizedPnL; });
+  const data = Object.entries(bySeg).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
+  if (!data.length) { $("#segChartWrap").innerHTML = ""; $("#segTable").innerHTML = ""; return; }
+  makeBarChart($("#segChartWrap"), data, { ariaLabel: "Realized P&L by segment", labelWidth: 70 });
+  const rows = data.map((d) => `<tr><td>${escapeHtml(d.label)}</td><td class="num right ${d.value >= 0 ? "up" : "down"}">${inr(d.value, { forceSign: true })}</td></tr>`).join("");
+  $("#segTable").innerHTML = `<table class="data"><thead><tr><th>Segment</th><th class="right">Realized P&L</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderLedgerPanel(ledgerInfo) {
+  const el = $("#ledgerPanel");
+  if (!ledgerInfo) { el.innerHTML = `<p class="note">No ledger uploaded yet.</p>`; return; }
+  const moveRows = ledgerInfo.capitalMoves.map((m) => `<tr><td>${escapeHtml(formatLedgerDate(m.date))}</td><td>${escapeHtml(m.particulars)}</td><td class="num right ${m.credit ? "up" : "down"}">${m.credit ? inr(m.credit, {forceSign:true}) : inr(-m.debit, {forceSign:true})}</td></tr>`).join("");
+  el.innerHTML = `
+    <div class="kpi-row" style="grid-template-columns:repeat(3,1fr); margin-bottom:16px;">
+      <div class="kpi"><div class="label">Ledger opening balance</div><div class="kpi-value">${inr(ledgerInfo.openingBalance || 0)}</div><div class="delta flat">included in the capital base above</div></div>
+      <div class="kpi"><div class="label">Ledger closing balance</div><div class="kpi-value">${ledgerInfo.balanceStr || "—"}</div></div>
+      <div class="kpi"><div class="label">Margin transfers (excluded from P&L)</div><div class="kpi-value">${ledgerInfo.marginCount}</div></div>
+    </div>
+    ${ledgerInfo.capitalMoves.length ? `
+    <div class="sub" style="margin-bottom:8px;">Capital movements detected in the ledger (deposits/withdrawals) — shown for reference; the capital-base field above is not adjusted automatically:</div>
+    <div class="table-scroll" style="max-height:220px;">
+      <table class="data"><thead><tr><th>Date</th><th>Particulars</th><th class="right">Amount</th></tr></thead><tbody>${moveRows}</tbody></table>
+    </div>` : `<p class="note">No deposits or withdrawals detected in this ledger.</p>`}
+  `;
+}
+
+function formatLedgerDate(d) {
+  if (!d) return "";
+  const parts = String(d).split("/");
+  if (parts.length !== 3) return d;
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const day = parseInt(parts[0], 10), mon = parseInt(parts[1], 10) - 1, yr = parts[2];
+  return `${day} ${months[mon] || ""} ${yr.length === 2 ? "20" + yr : yr}`;
+}
+
+function computeLedgerInfo() {
+  if (!state.ledger.length) return null;
+  const toDateL = (s) => { const p = String(s).split("/"); const yy = p[2].length === 2 ? "20" + p[2] : p[2]; return new Date(Number(yy), Number(p[1]) - 1, Number(p[0])).getTime(); };
+  const sorted = state.ledger.slice().sort((a, b) => toDateL(a.date) - toDateL(b.date));
+  const last = sorted[sorted.length - 1];
+  const capitalMoves = sorted.filter((e) => /UPI transfer|NEFT|RTGS|IMPS|fund transfer/i.test(e.particulars));
+  const marginCount = sorted.filter((e) => /Curr\.?\s*Mrgn|Margin/i.test(e.particulars)).length;
+  return {
+    openingBalance: state.ledgerOpening || null,
+    balanceStr: last ? inr(last.balance) : "—",
+    capitalMoves, marginCount,
+  };
+}
+
+function renderTradeLog(engine) {
+  const search = ($("#logSearch").value || "").toLowerCase();
+  const segFilter = $("#logSegFilter").value;
+  let rows = engine.tradeLog.filter((t) => (segFilter === "ALL" || t.segment === segFilter) && (!search || t.label.toLowerCase().includes(search)));
+  $("#logSub").textContent = `${rows.length} of ${engine.tradeLog.length} rows`;
+  const html = rows.slice().reverse().slice(0, 500).map((t) => `<tr>
+      <td>${escapeHtml(formatTradeDate(t.date))}</td>
+      <td>${escapeHtml(t.label)}</td>
+      <td><span class="pill ${t.segment === "CASH" ? "cash" : "fno"}">${escapeHtml(t.segment)}</span></td>
+      <td class="num right">${t.buyQty ? `${t.buyQty} @ ${t.buyNetRate.toFixed(2)}` : "—"}</td>
+      <td class="num right">${t.sellQty ? `${t.sellQty} @ ${t.sellNetRate.toFixed(2)}` : "—"}</td>
+      <td class="num right ${t.realizedPnL > 0 ? "up" : (t.realizedPnL < 0 ? "down" : "")}">${t.realizedPnL ? inr(t.realizedPnL, { forceSign: true }) : "—"}</td>
+    </tr>`).join("");
+  $("#tradeLogTable").innerHTML = `<table class="data"><thead><tr><th>Date</th><th>Instrument</th><th>Segment</th><th class="right">Buy</th><th class="right">Sell</th><th class="right">Realized</th></tr></thead><tbody>${html}</tbody></table>`;
+}
+
+function renderCapitalNote() {
+  const el = $("#capitalNote");
+  el.textContent = state.ledgerOpening
+    ? `+ ${inr(state.ledgerOpening)} already in the account (from the ledger) = ${inr(effectiveCapitalBase())} total`
+    : "";
+}
+
+function render() {
+  renderCapitalNote();
+  if (!state.trades.length) {
+    $("#emptyState").style.display = "";
+    $("#app").style.display = "none";
+    renderChips();
+    return;
+  }
+  $("#emptyState").style.display = "none";
+  $("#app").style.display = "";
+  const engine = runEngine(state.trades);
+  const ledgerInfo = computeLedgerInfo();
+  renderFlagBanner(engine);
+  renderKPIs(engine, ledgerInfo);
+  renderEquity(engine);
+  renderDrawdown(engine);
+  renderOpenPositions(engine);
+  renderSegmentPnl(engine);
+  renderLedgerPanel(ledgerInfo);
+  renderTradeLog(engine);
+  renderChips();
+}
+
+/* ============================== FILE HANDLING ============================== */
+function readWorkbook(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => { try { resolve(XLSX.read(e.target.result, { type: "array" })); } catch (err) { reject(err); } };
+    reader.onerror = () => reject(new Error("Could not read the file."));
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+$("#fileTrades").addEventListener("change", async (e) => {
+  const file = e.target.files[0]; if (!file) return;
+  try {
+    const wb = await readWorkbook(file);
+    const { clientName, statementDate, trades } = parseTradeListing(wb);
+    const { merged, added } = mergeTrades(state.trades, trades);
+    state.trades = merged; safeSet(LS_TRADES, merged);
+    state.uploads.push({ kind: "Trade listing", summary: `${clientName || ""} · as of ${statementDate || "?"} · +${added} new / ${trades.length} in file`.trim() });
+    safeSet(LS_UPLOADS, state.uploads);
+    setStatus(`Loaded ${file.name}: ${added} new trade row${added === 1 ? "" : "s"} added (${trades.length - added} already had this).`, "ok");
+    render();
+  } catch (err) { setStatus("Couldn't parse that trade-listing file: " + err.message, "err"); }
+  e.target.value = "";
+});
+
+$("#fileLedger").addEventListener("change", async (e) => {
+  const file = e.target.files[0]; if (!file) return;
+  try {
+    const wb = await readWorkbook(file);
+    const { openingBalance, entries } = parseLedger(wb);
+    const { merged, added } = mergeLedger(state.ledger, entries);
+    state.ledger = merged; safeSet(LS_LEDGER, merged);
+    if (openingBalance != null && state.ledgerOpening == null) { state.ledgerOpening = openingBalance; safeSet(LS_LEDGER_OPENING, openingBalance); }
+    state.uploads.push({ kind: "Ledger", summary: `+${added} new / ${entries.length} in file` });
+    safeSet(LS_UPLOADS, state.uploads);
+    setStatus(`Loaded ${file.name}: ${added} new ledger row${added === 1 ? "" : "s"} added (${entries.length - added} already had this).`, "ok");
+    render();
+  } catch (err) { setStatus("Couldn't parse that ledger file: " + err.message, "err"); }
+  e.target.value = "";
+});
+
+$("#btnReset").addEventListener("click", () => {
+  if (!confirm("Clear all trades, ledger entries, and upload history stored in this browser? This can't be undone.")) return;
+  state = { trades: [], ledger: [], uploads: [], capitalBase: state.capitalBase, ledgerOpening: null, dismissedFlags: [] };
+  safeSet(LS_TRADES, []); safeSet(LS_LEDGER, []); safeSet(LS_UPLOADS, []); safeSet(LS_LEDGER_OPENING, null); safeSet(LS_DISMISSED_FLAGS, []);
+  setStatus("All stored data cleared.", "ok");
+  render();
+});
+
+/* ============================== BACKUP: EXPORT / IMPORT ============================== */
+// Saving a file from inside the Claude Artifact viewer's sandbox requires the
+// `downloads` capability (a plain <a download> is inert there) — but the same
+// page also works as a plain local HTML file (e.g. if someone downloads and
+// opens it directly), where window.claude doesn't exist at all and the
+// classic blob/anchor approach is what works. Try the capability first, fall
+// back to the classic approach if it's unavailable.
+async function saveFile(filename, contentString, mime) {
+  if (window.claude && typeof window.claude.use === "function") {
+    try {
+      const downloads = await window.claude.use("downloads");
+      if (downloads) {
+        await downloads.save({ filename, data: contentString });
+        return { ok: true };
+      }
+    } catch (err) {
+      const code = err && err.code;
+      if (code === "declined") return { ok: false, message: "Save cancelled." };
+      if (code === "rate_limited") return { ok: false, message: "Try again in a moment — a save prompt is already open." };
+      if (code === "too_large") return { ok: false, message: "That backup is too large to save this way (over 16MB)." };
+      return { ok: false, message: "Couldn't save the file: " + (err && err.message ? err.message : "unknown error") };
+      // (window.claude existed but the capability truly failed — don't silently
+      // fall through to a download the sandbox would just drop.)
+    }
+  }
+  try {
+    const blob = new Blob([contentString], { type: mime || "application/octet-stream" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, message: "Couldn't save the file: " + err.message };
+  }
+}
+
+function todayStr() { const d = new Date(); return d.toISOString().slice(0, 10); }
+
+$("#btnExportBackup").addEventListener("click", async () => {
+  const backup = {
+    schema: "stwp-trade-ledger-backup", version: 1, exportedAt: new Date().toISOString(),
+    capitalBase: state.capitalBase, trades: state.trades, ledger: state.ledger, uploads: state.uploads,
+    ledgerOpening: state.ledgerOpening, dismissedFlags: state.dismissedFlags,
+  };
+  const filename = `stwp-trade-ledger-backup-${todayStr()}.json`;
+  setStatus("Preparing backup…");
+  const result = await saveFile(filename, JSON.stringify(backup, null, 2), "application/json");
+  if (result.ok) setStatus(`Backup saved: ${filename} (${state.trades.length} trades, ${state.ledger.length} ledger rows).`, "ok");
+  else setStatus(result.message, result.message === "Save cancelled." ? "" : "err");
+});
+
+$("#fileBackup").addEventListener("change", (e) => {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const backup = JSON.parse(ev.target.result);
+      if (!backup || !Array.isArray(backup.trades) || !Array.isArray(backup.ledger)) {
+        throw new Error("This doesn't look like a Trade Ledger backup file.");
+      }
+      const wasEmpty = state.trades.length === 0 && state.ledger.length === 0;
+      const { merged: mergedTrades, added: addedTrades } = mergeTrades(state.trades, backup.trades);
+      const { merged: mergedLedger, added: addedLedger } = mergeLedger(state.ledger, backup.ledger || []);
+      state.trades = mergedTrades; safeSet(LS_TRADES, mergedTrades);
+      state.ledger = mergedLedger; safeSet(LS_LEDGER, mergedLedger);
+      if (Array.isArray(backup.uploads)) { state.uploads = state.uploads.concat(backup.uploads); safeSet(LS_UPLOADS, state.uploads); }
+      if (state.ledgerOpening == null && typeof backup.ledgerOpening === "number") { state.ledgerOpening = backup.ledgerOpening; safeSet(LS_LEDGER_OPENING, backup.ledgerOpening); }
+      if (Array.isArray(backup.dismissedFlags) && backup.dismissedFlags.length) {
+        state.dismissedFlags = [...new Set(state.dismissedFlags.concat(backup.dismissedFlags))];
+        safeSet(LS_DISMISSED_FLAGS, state.dismissedFlags);
+      }
+      let capNote = "";
+      if (wasEmpty && typeof backup.capitalBase === "number") {
+        state.capitalBase = backup.capitalBase; safeSet(LS_CAPITAL, backup.capitalBase);
+        capitalInput.value = backup.capitalBase;
+        capNote = ` Capital base restored to ${inr(backup.capitalBase)}.`;
+      }
+      setStatus(`Restored from backup: ${addedTrades} new trade row${addedTrades === 1 ? "" : "s"}, ${addedLedger} new ledger row${addedLedger === 1 ? "" : "s"} added.${capNote}`, "ok");
+      render();
+    } catch (err) {
+      setStatus("Couldn't read that backup file: " + err.message, "err");
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = "";
+});
+
+document.addEventListener("click", (e) => {
+  const tableBtn = e.target.closest(".table-toggle");
+  if (tableBtn) {
+    const target = document.getElementById(tableBtn.dataset.target);
+    const showing = target.style.display !== "none";
+    target.style.display = showing ? "none" : "";
+    tableBtn.textContent = showing ? "View as table" : "Hide table";
+    return;
+  }
+  const dismissBtn = e.target.closest(".flag-dismiss");
+  if (dismissBtn) {
+    const id = dismissBtn.dataset.flagId;
+    if (!state.dismissedFlags.includes(id)) {
+      state.dismissedFlags = state.dismissedFlags.concat([id]);
+      safeSet(LS_DISMISSED_FLAGS, state.dismissedFlags);
+    }
+    render();
+  }
+});
+
+$("#logSearch").addEventListener("input", () => { const engine = runEngine(state.trades); renderTradeLog(engine); });
+$("#logSegFilter").addEventListener("change", () => { const engine = runEngine(state.trades); renderTradeLog(engine); });
+
+render();
+</script>
