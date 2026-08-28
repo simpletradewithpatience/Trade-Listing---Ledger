@@ -90,7 +90,7 @@
 
   a { color: inherit; }
 
-  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 24px 72px; }
+  .wrap { max-width: 1760px; margin: 0 auto; padding: 28px 32px 72px; }
 
   /* ---- Header ---- */
   header.top {
@@ -168,7 +168,7 @@
   @media (max-width: 860px) { .grid-2 { grid-template-columns: 1fr; } }
 
   /* ---- KPI row ---- */
-  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
   @media (max-width: 860px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
   .kpi {
     background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 15px 16px;
@@ -602,7 +602,7 @@ function runEngine(trades) {
   // an expired contract's closing-price field populated with the underlying
   // index level instead of the contract premium).
   const flags = [];
-  let totalRealized = 0, totalUnrealized = 0, provisionalRealized = 0, excludedUnrealizedCount = 0;
+  let totalRealized = 0, totalUnrealized = 0, provisionalRealized = 0, excludedUnrealizedCount = 0, totalOpenValue = 0;
   const openPositions = [];
   for (const [key, pos] of Object.entries(positions)) {
     totalRealized += pos.realized;
@@ -622,13 +622,15 @@ function runEngine(trades) {
         if (ratio > 25 || ratio < 0.04) suspicious = true;
       }
       const unrealized = pos.qty > 0 ? pos.qty * (pos.lastClose - pos.avgPrice) : Math.abs(pos.qty) * (pos.avgPrice - pos.lastClose);
-      const entry = { key, ...pos, unrealizedPnL: unrealized, suspicious };
+      const currentValue = Math.abs(pos.qty) * pos.lastClose;
+      const entry = { key, ...pos, unrealizedPnL: unrealized, currentValue, suspicious };
       openPositions.push(entry);
       if (suspicious) {
         excludedUnrealizedCount++;
         flags.push({ id: `suspicious-close:${key}`, type: "suspicious-close", message: `"${pos.label}" (${pos.segment}) shows a closing price of ${pos.lastClose.toLocaleString("en-IN")} against an average trade price of ${pos.avgPrice.toFixed(2)} — that's a ${ratio.toFixed(0)}× gap, most likely a bad closing-price field in the export (e.g. an index level where a contract premium was expected). Its unrealized P&L is excluded from the totals below — check it manually.` });
       } else {
         totalUnrealized += unrealized;
+        totalOpenValue += currentValue;
       }
     }
   }
@@ -643,7 +645,7 @@ function runEngine(trades) {
   const avgWin = wins.length ? wins.reduce((s, e) => s + e.realizedPnL, 0) / wins.length : 0;
   const avgLoss = losses.length ? losses.reduce((s, e) => s + e.realizedPnL, 0) / losses.length : 0;
 
-  return { totalRealized, totalUnrealized, provisionalRealized, excludedUnrealizedCount, openPositions, tradeLog, equityCurve, dailyRealized,
+  return { totalRealized, totalUnrealized, provisionalRealized, excludedUnrealizedCount, totalOpenValue, openPositions, tradeLog, equityCurve, dailyRealized,
     closingEvents, winRate, avgWin, avgLoss, winCount: wins.length, lossCount: losses.length, flags,
     firstDate: dates[0] || null, lastDate: dates[dates.length - 1] || null, dates };
 }
@@ -997,7 +999,7 @@ function renderKPIs(engine, ledgerInfo) {
 
   const tiles = [
     { label: "Capital base", value: inr(capBase),
-      delta: state.ledgerOpening ? `${inr(state.capitalBase)} added + ${inr(state.ledgerOpening)} already in the account` : null, deltaClass: "flat" },
+      delta: state.ledgerOpening ? `${inr(state.capitalBase)} added + ${inr(state.ledgerOpening)} carried over from before this tracking period` : null, deltaClass: "flat" },
     { label: "Capital remaining", value: inr(equity), delta: `${pct(returnPct)} · started with ${inr(capBase)}`, deltaClass: returnPct >= 0 ? "up" : "down" },
     { label: "Available cash", value: ledgerInfo && ledgerInfo.balanceStr ? ledgerInfo.balanceStr : "—",
       delta: ledgerInfo ? "ledger closing balance — actual cash sitting in the account" : "upload the ledger to see this", deltaClass: "flat" },
@@ -1009,6 +1011,8 @@ function renderKPIs(engine, ledgerInfo) {
     { label: "Win rate", value: (engine.winRate * 100).toFixed(0) + "%", delta: `${engine.winCount}W / ${engine.lossCount}L closes`, deltaClass: "flat" },
     { label: "Avg win / avg loss", value: `${inr(engine.avgWin, {forceSign:false})} / ${inr(engine.avgLoss, {forceSign:false})}`, delta: null },
     { label: "Open positions", value: String(engine.openPositions.length), delta: null, deltaClass: "flat" },
+    { label: "Value of open trades", value: inr(engine.totalOpenValue),
+      delta: engine.excludedUnrealizedCount ? `at last known price — excl. ${engine.excludedUnrealizedCount} flagged position${engine.excludedUnrealizedCount > 1 ? "s" : ""}` : "at last known price", deltaClass: "flat" },
   ];
   const row = $("#kpiRow");
   row.innerHTML = "";
@@ -1067,9 +1071,10 @@ function renderOpenPositions(engine) {
       <td class="num right">${p.qty}</td>
       <td class="num right">${p.avgPrice.toFixed(2)}</td>
       <td class="num right">${p.lastClose.toFixed(2)}</td>
+      <td class="num right">${p.suspicious ? "flagged" : inr(p.currentValue)}</td>
       <td class="num right ${p.suspicious ? "" : (p.unrealizedPnL >= 0 ? "up" : "down")}">${p.suspicious ? "flagged" : inr(p.unrealizedPnL, { forceSign: true })}</td>
     </tr>`).join("");
-  el.innerHTML = `<table class="data"><thead><tr><th>Instrument</th><th>Segment</th><th class="right">Qty</th><th class="right">Avg price</th><th class="right">Last close</th><th class="right">Unrealized</th></tr></thead><tbody>${rows}</tbody></table>`;
+  el.innerHTML = `<table class="data"><thead><tr><th>Instrument</th><th>Segment</th><th class="right">Qty</th><th class="right">Avg price</th><th class="right">Last close</th><th class="right">Value</th><th class="right">Unrealized</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 function renderSegmentPnl(engine) {
@@ -1142,7 +1147,7 @@ function renderTradeLog(engine) {
 function renderCapitalNote() {
   const el = $("#capitalNote");
   el.textContent = state.ledgerOpening
-    ? `+ ${inr(state.ledgerOpening)} already in the account (from the ledger) = ${inr(effectiveCapitalBase())} total`
+    ? `+ ${inr(state.ledgerOpening)} carried over from before this tracking period (per the ledger) = ${inr(effectiveCapitalBase())} total`
     : "";
 }
 
