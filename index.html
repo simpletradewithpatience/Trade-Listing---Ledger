@@ -1,6 +1,18 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
 <title>STWP Trade Ledger</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<style>
+.date-filter { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); white-space:nowrap; }
+.date-filter input, .date-filter select { min-width:145px; }
+@media (max-width: 900px) {
+  .date-filter { width:100%; }
+  .date-filter input, .date-filter select { flex:1; min-width:0; }
+}
+</style>
 <style>
   :root {
     color-scheme: light;
@@ -73,7 +85,6 @@
     --tooltip-ink: #14180f;
     --focus: #6da7ec;
   }
-
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body {
@@ -87,11 +98,8 @@
   .serif { font-family: "Source Serif 4", Georgia, "Times New Roman", serif; }
   .mono, .num, td.num, .kpi-value, table.data td { font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
   .num, td.num { font-variant-numeric: tabular-nums; }
-
   a { color: inherit; }
-
   .wrap { max-width: 1760px; margin: 0 auto; padding: 28px 32px 72px; }
-
   /* ---- Header ---- */
   header.top {
     display: flex; flex-wrap: wrap; gap: 20px 32px; align-items: flex-end; justify-content: space-between;
@@ -113,7 +121,6 @@
     padding: 7px 9px;
   }
   .capital-control input:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
-
   .upload-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
   .upload-btn {
     position: relative; display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
@@ -128,19 +135,16 @@
     font-size: 12px; color: var(--ink-2); cursor: pointer; font-family: inherit;
   }
   .ghost-btn:hover { color: var(--critical); border-color: var(--critical); }
-
   .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
   .chip {
     font-size: 11.5px; padding: 4px 9px; border-radius: 999px; background: var(--surface-2);
     border: 1px solid var(--border); color: var(--ink-2); display: inline-flex; gap: 6px; align-items: center;
   }
   .chip .mono { color: var(--ink); }
-
   .status-line { font-size: 12px; color: var(--ink-2); margin-top: 8px; min-height: 16px; }
   .status-line.err { color: var(--critical); }
   .status-line.ok { color: var(--good); }
   .backup-row { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); align-items: center; }
-
   /* ---- Empty state ---- */
   .empty {
     border: 1px dashed var(--border-strong); border-radius: 14px; padding: 64px 32px; text-align: center;
@@ -148,7 +152,6 @@
   }
   .empty h2 { font-family: "Source Serif 4", serif; font-size: 20px; color: var(--ink); margin: 0 0 8px; }
   .empty p { max-width: 52ch; margin: 0 auto; }
-
   /* ---- Sections / cards ---- */
   section { margin-top: 26px; }
   .card {
@@ -163,13 +166,13 @@
     padding: 4px 9px; cursor: pointer; font-family: inherit;
   }
   .table-toggle:hover { border-color: var(--focus); color: var(--focus); }
-
   .grid-2 { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 16px; align-items: start; }
   @media (max-width: 860px) { .grid-2 { grid-template-columns: 1fr; } }
-
   /* ---- KPI row ---- */
   .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
   @media (max-width: 860px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 1100px) { #ledgerPanel .kpi-row { grid-template-columns: repeat(3, 1fr) !important; } }
+  @media (max-width: 700px) { #ledgerPanel .kpi-row { grid-template-columns: repeat(2, 1fr) !important; } }
   .kpi {
     background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 15px 16px;
   }
@@ -177,7 +180,6 @@
   .kpi .kpi-value { font-size: 21px; font-weight: 600; letter-spacing: -0.01em; }
   .kpi .delta { font-size: 12px; margin-top: 4px; }
   .up { color: var(--good); } .down { color: var(--critical); } .flat { color: var(--muted); }
-
   /* ---- Charts ---- */
   .chart-svg { width: 100%; height: auto; display: block; overflow: visible; }
   .crosshair-line { stroke: var(--border-strong); stroke-width: 1; pointer-events: none; }
@@ -193,7 +195,6 @@
   .legend { display: flex; gap: 16px; font-size: 11.5px; color: var(--ink-2); margin-top: 10px; flex-wrap: wrap; }
   .legend .lg-item { display: flex; align-items: center; gap: 6px; }
   .legend .lg-swatch { width: 12px; height: 2px; border-radius: 1px; }
-
   /* ---- Tables ---- */
   table.data { width: 100%; border-collapse: collapse; font-size: 12.5px; }
   table.data th {
@@ -218,7 +219,6 @@
     background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 7px; padding: 8px 11px;
     font-size: 12.5px; color: var(--ink); font-family: inherit;
   }
-
   /* ---- Flags / notes ---- */
   .flag-banner {
     border: 1px solid rgba(249,147,9,0.4); background: var(--warning-wash); border-radius: 10px; padding: 12px 16px;
@@ -233,20 +233,18 @@
   }
   .flag-dismiss:hover { background: rgba(249,147,9,0.15); }
   .note { font-size: 12px; color: var(--muted); margin-top: 10px; }
-
   footer.foot { margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 11.5px; color: var(--muted); }
-
   ::selection { background: var(--good-wash); }
   button, input { font-family: inherit; }
   :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.googleapis.com/" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
+</head>
+<body>
 <div class="wrap">
-
   <header class="top">
     <div class="brand-block">
       <h1>Trade Ledger</h1>
@@ -261,7 +259,6 @@
       <span class="cc-note" id="capitalNote"></span>
     </div>
   </header>
-
   <div class="upload-row">
     <label class="upload-btn">
       <span class="dot"></span> Upload trade listing (.xls/.xlsx)
@@ -275,7 +272,6 @@
   </div>
   <div class="status-line" id="statusLine"></div>
   <div class="chips" id="uploadChips"></div>
-
   <div class="upload-row backup-row">
     <button class="ghost-btn" id="btnExportBackup" type="button">↓ Download backup (.json)</button>
     <label class="ghost-btn" style="position:relative;">
@@ -284,18 +280,13 @@
     </label>
     <span class="note" style="margin-top:0;">Everything here lives only in this browser. Download a backup before switching browsers or devices, or just to be safe — restoring merges it back in, it won't duplicate or overwrite what's already loaded.</span>
   </div>
-
   <div id="emptyState" class="empty" style="margin-top:26px;">
     <h2>No trades loaded yet</h2>
     <p>Upload an IIFL trade-listing export and a ledger export to build your equity curve. Every future statement you upload is added to what's already here — nothing is overwritten.</p>
   </div>
-
   <div id="app" style="display:none;">
-
     <div id="flagBanner"></div>
-
     <section class="kpi-row" id="kpiRow"></section>
-
     <section class="card">
       <div class="card-head">
         <div>
@@ -313,7 +304,6 @@
       <div class="table-scroll" id="equityTable" style="display:none; margin-top:12px;"></div>
       <p class="note">Shows cumulative <em>realized</em> P&amp;L day by day. Unrealized P&amp;L (mark-to-market on positions still open) is only known as of your latest upload and is layered on as the final point — the curve does not show its day-to-day history.</p>
     </section>
-
     <section class="card">
       <div class="card-head">
         <div>
@@ -325,7 +315,6 @@
       <div class="chart-wrap" id="ddChartWrap"></div>
       <div class="table-scroll" id="ddTable" style="display:none; margin-top:12px;"></div>
     </section>
-
     <section class="grid-2">
       <div class="card">
         <div class="card-head">
@@ -348,7 +337,6 @@
         <div class="table-scroll" id="segTable" style="display:none; margin-top:12px;"></div>
       </div>
     </section>
-
     <section class="card">
       <div class="card-head">
         <div>
@@ -358,7 +346,6 @@
       </div>
       <div id="ledgerPanel"></div>
     </section>
-
     <section class="card">
       <div class="card-head">
         <div>
@@ -374,31 +361,30 @@
           <option value="FNO">F&amp;O</option>
           <option value="MCX">MCX</option>
         </select>
+        <label class="date-filter">
+          <span>Trade Date</span>
+          <select id="logTradeDate">
+            <option value="ALL">All dates</option>
+          </select>
+        </label>
       </div>
       <div class="table-scroll" id="tradeLogTable"></div>
     </section>
-
   </div>
-
   <footer class="foot">
     Parsed and computed entirely in this browser — your statements are never uploaded anywhere. Position P&amp;L uses weighted-average cost, processing each day's buy leg before its sell leg (same-day intraday sequencing isn't in the broker export).
   </footer>
-
 </div>
-
 <script>
 "use strict";
-
 /* ============================== PARSING ============================== */
 // Mirrors the tested Node parser (SheetJS, same library) — verified against
 // the real IIFL export format before being ported here.
-
 function sheetToRows(workbook) {
   const sheetName = workbook.SheetNames[0];
   const ws = workbook.Sheets[sheetName];
   return XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: null });
 }
-
 function parseTradeListing(workbook) {
   const rows = sheetToRows(workbook);
   let headerIdx = -1;
@@ -407,7 +393,6 @@ function parseTradeListing(workbook) {
     if (row.includes("Exchange") && row.some((c) => c.startsWith("Trade Date"))) { headerIdx = i; break; }
   }
   if (headerIdx === -1) throw new Error("Could not find the trade-listing header row (expected columns like Exchange / Trade Date / Code).");
-
   let clientName = null, statementDate = null;
   for (let i = 0; i < headerIdx; i++) {
     for (const cell of rows[i]) {
@@ -417,14 +402,12 @@ function parseTradeListing(workbook) {
       }
     }
   }
-
   const header = rows[headerIdx];
   const idx = {};
   header.forEach((h, i) => { if (h == null) return; const key = String(h).trim(); if (key) idx[key] = i; });
   const num = (v) => (v == null || v === "" ? 0 : Number(v) || 0);
   const closeKey = Object.keys(idx).find((k) => k.startsWith("Closing Price"));
   const closeValKey = Object.keys(idx).find((k) => k.startsWith("Closing Value"));
-
   const trades = [];
   for (let i = headerIdx + 1; i < rows.length; i++) {
     const r = rows[i];
@@ -449,7 +432,6 @@ function parseTradeListing(workbook) {
   }
   return { clientName, statementDate, trades };
 }
-
 function parseBalance(raw) {
   if (raw == null) return null;
   const s = String(raw).trim();
@@ -459,7 +441,6 @@ function parseBalance(raw) {
   if (m[2] && m[2].toLowerCase() === "dr") v = -v;
   return v;
 }
-
 function parseLedger(workbook) {
   const rows = sheetToRows(workbook);
   let headerIdx = -1;
@@ -468,11 +449,9 @@ function parseLedger(workbook) {
     if (row.includes("Date") && row.includes("Particulars") && row.includes("Balance")) { headerIdx = i; break; }
   }
   if (headerIdx === -1) throw new Error("Could not find the ledger header row (expected columns like Date / Particulars / Balance).");
-
   const header = rows[headerIdx];
   const idx = {};
   header.forEach((h, i) => { if (h == null) return; const key = String(h).trim(); if (key && !(key in idx)) idx[key] = i; });
-
   const num = (v) => (v == null || v === "" ? null : Number(v));
   const entries = [];
   let openingBalance = null;
@@ -494,20 +473,16 @@ function parseLedger(workbook) {
   }
   return { openingBalance, entries };
 }
-
 /* ============================== ENGINE ============================== */
 // Weighted-average-cost position engine — identical logic to the
 // independently cross-checked Node + Python versions used to validate this
 // tool before shipping.
-
 function toDateTL(s) { const [d, m, y] = String(s).split("/").map(Number); return new Date(y, m - 1, d).getTime(); }
-
 function instrumentKey(t) {
   const seg = t.exchange.includes("CASH") ? "CASH" : "DERIV";
   if (seg === "CASH") return `CASH|${t.name || t.code}`;
   return `${t.exchange}|${t.code}|${t.expiryDate || ""}|${t.strikePrice || ""}|${t.optionType || ""}`;
 }
-
 function labelFor(t) {
   if (t.exchange.includes("CASH")) return t.name || t.code;
   const parts = [t.code];
@@ -516,21 +491,18 @@ function labelFor(t) {
   if (t.optionType) parts.push(t.optionType);
   return parts.join(" ");
 }
-
 function median(arr) {
   if (!arr.length) return null;
   const s = arr.slice().sort((a, b) => a - b);
   const mid = Math.floor(s.length / 2);
   return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
 }
-
 function runEngine(trades) {
   const sorted = trades.slice().sort((a, b) => toDateTL(a.tradeDate) - toDateTL(b.tradeDate));
   const positions = {};
   const dailyRealized = {};
   const tradeLog = [];
   const closingEvents = [];
-
   // Baseline "normal" brokerage rate for cash-equity legs in this data set, so a
   // trade whose per-unit charge is way outside that norm can be told apart from
   // an ordinary buy/sell — e.g. an exchange auction close-out (a failed-delivery
@@ -543,7 +515,6 @@ function runEngine(trades) {
     if (t.sellQty && t.sellMktRate) cashRatios.push(t.sellBrokerage / t.sellMktRate);
   }
   const normalBrokerageRate = median(cashRatios);
-
   function applyExec(key, qtyDelta, price, t) {
     let pos = positions[key];
     if (!pos) {
@@ -585,7 +556,6 @@ function runEngine(trades) {
     }
     return realized;
   }
-
   for (const t of sorted) {
     const key = instrumentKey(t);
     let dayRealized = 0;
@@ -596,13 +566,12 @@ function runEngine(trades) {
     tradeLog.push({ date: t.tradeDate, key, label: labelFor(t), exchange: t.exchange, segment: (t.exchange.includes("CASH") ? "CASH" : (t.exchange === "MCX" ? "MCX" : "FNO")),
       buyQty: t.buyQty, sellQty: t.sellQty, buyNetRate: t.buyNetRate, sellNetRate: t.sellNetRate, realizedPnL: dayRealized });
   }
-
   // Data-quality guard: flag any open derivative position whose reported closing
   // price is wildly out of line with its own traded prices (seen in the wild —
   // an expired contract's closing-price field populated with the underlying
   // index level instead of the contract premium).
   const flags = [];
-  let totalRealized = 0, totalUnrealized = 0, provisionalRealized = 0, excludedUnrealizedCount = 0, totalOpenValue = 0;
+  let totalRealized = 0, totalUnrealized = 0, provisionalRealized = 0, excludedUnrealizedCount = 0, totalOpenValue = 0, totalInvestedValue = 0;
   const openPositions = [];
   for (const [key, pos] of Object.entries(positions)) {
     totalRealized += pos.realized;
@@ -623,8 +592,10 @@ function runEngine(trades) {
       }
       const unrealized = pos.qty > 0 ? pos.qty * (pos.lastClose - pos.avgPrice) : Math.abs(pos.qty) * (pos.avgPrice - pos.lastClose);
       const currentValue = Math.abs(pos.qty) * pos.lastClose;
-      const entry = { key, ...pos, unrealizedPnL: unrealized, currentValue, suspicious };
+      const investedValue = Math.abs(pos.qty) * pos.avgPrice;
+      const entry = { key, ...pos, unrealizedPnL: unrealized, currentValue, investedValue, suspicious };
       openPositions.push(entry);
+      totalInvestedValue += investedValue;
       if (suspicious) {
         excludedUnrealizedCount++;
         flags.push({ id: `suspicious-close:${key}`, type: "suspicious-close", message: `"${pos.label}" (${pos.segment}) shows a closing price of ${pos.lastClose.toLocaleString("en-IN")} against an average trade price of ${pos.avgPrice.toFixed(2)} — that's a ${ratio.toFixed(0)}× gap, most likely a bad closing-price field in the export (e.g. an index level where a contract premium was expected). Its unrealized P&L is excluded from the totals below — check it manually.` });
@@ -634,22 +605,18 @@ function runEngine(trades) {
       }
     }
   }
-
   const dates = [...new Set(sorted.map((t) => t.tradeDate))].sort((a, b) => toDateTL(a) - toDateTL(b));
   let cum = 0;
   const equityCurve = dates.map((d) => { cum += dailyRealized[d] || 0; return { date: d, cumRealized: cum }; });
-
   const wins = closingEvents.filter((e) => e.realizedPnL > 0);
   const losses = closingEvents.filter((e) => e.realizedPnL < 0);
   const winRate = closingEvents.length ? wins.length / closingEvents.length : 0;
   const avgWin = wins.length ? wins.reduce((s, e) => s + e.realizedPnL, 0) / wins.length : 0;
   const avgLoss = losses.length ? losses.reduce((s, e) => s + e.realizedPnL, 0) / losses.length : 0;
-
-  return { totalRealized, totalUnrealized, provisionalRealized, excludedUnrealizedCount, totalOpenValue, openPositions, tradeLog, equityCurve, dailyRealized,
+  return { totalRealized, totalUnrealized, provisionalRealized, excludedUnrealizedCount, totalOpenValue, totalInvestedValue, openPositions, tradeLog, equityCurve, dailyRealized,
     closingEvents, winRate, avgWin, avgLoss, winCount: wins.length, lossCount: losses.length, flags,
     firstDate: dates[0] || null, lastDate: dates[dates.length - 1] || null, dates };
 }
-
 /* ============================== STORAGE ============================== */
 const LS_TRADES = "stwp-journal-trades-v1";
 const LS_LEDGER = "stwp-journal-ledger-v1";
@@ -657,18 +624,16 @@ const LS_CAPITAL = "stwp-journal-capitalbase-v1";
 const LS_UPLOADS = "stwp-journal-uploads-v1";
 const LS_LEDGER_OPENING = "stwp-journal-ledger-opening-v1";
 const LS_DISMISSED_FLAGS = "stwp-journal-dismissed-flags-v1";
-
+const LS_MANUAL_LTP = "stwp-journal-manual-ltp-v1";
 function safeGet(key, fallback) {
   try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
   catch (e) { return fallback; }
 }
 function safeSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) { /* storage unavailable */ } }
-
 function tradeId(t) {
   return [t.exchange, t.tradeDate, t.code, t.expiryDate, t.strikePrice, t.optionType, t.buyQty, t.buyNetRate, t.sellQty, t.sellNetRate].join("|");
 }
 function ledgerId(e) { return e.voucher ? `${e.date}|${e.voucher}` : `${e.date}|${e.particulars}|${e.debit}|${e.credit}|${e.balance}`; }
-
 function mergeTrades(existing, incoming) {
   const byId = new Map(existing.map((t) => [tradeId(t), t]));
   let added = 0;
@@ -681,7 +646,6 @@ function mergeLedger(existing, incoming) {
   for (const e of incoming) { const id = ledgerId(e); if (!byId.has(id)) { byId.set(id, e); added++; } }
   return { merged: [...byId.values()], added };
 }
-
 /* ============================== FORMATTING ============================== */
 function inr(n, opts) {
   opts = opts || {};
@@ -692,7 +656,6 @@ function inr(n, opts) {
 }
 function pct(n, decimals) { const d = decimals == null ? 1 : decimals; const sign = n < 0 ? "−" : "+"; return `${sign}${Math.abs(n).toFixed(d)}%`; }
 function escapeHtml(s) { const d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
-
 /* ============================== CHART HELPERS (plain SVG) ============================== */
 const NS = "http://www.w3.org/2000/svg";
 function svgEl(tag, attrs) {
@@ -723,7 +686,6 @@ function compactInr(n) {
   else s = n.toFixed(0);
   return s;
 }
-
 // Line chart: equity vs flat baseline, area wash colored by sign relative to baseline.
 function makeEquityChart(container, points, baseline, opts) {
   opts = opts || {};
@@ -731,18 +693,14 @@ function makeEquityChart(container, points, baseline, opts) {
   const width = 1040, height = opts.height || 260;
   const margin = { top: 16, right: 18, bottom: 26, left: 54 };
   const innerW = width - margin.left - margin.right, innerH = height - margin.top - margin.bottom;
-
   const ys = points.map((p) => p.y).concat([baseline]);
   const yMin = Math.min(...ys), yMax = Math.max(...ys);
   const pad = (yMax - yMin) * 0.12 || Math.abs(baseline) * 0.05 || 1000;
   const ticks = niceTicks(yMin - pad, yMax + pad, 5);
   const domainMin = ticks[0], domainMax = ticks[ticks.length - 1];
-
   const x = (i) => margin.left + (points.length <= 1 ? innerW / 2 : (i / (points.length - 1)) * innerW);
   const y = (v) => margin.top + innerH - ((v - domainMin) / (domainMax - domainMin)) * innerH;
-
   const svg = svgEl("svg", { viewBox: `0 0 ${width} ${height}`, class: "chart-svg", role: "img", "aria-label": opts.ariaLabel || "Chart" });
-
   // gridlines + y ticks
   ticks.forEach((t) => {
     svg.appendChild(svgEl("line", { x1: margin.left, x2: width - margin.right, y1: y(t), y2: y(t), stroke: "var(--grid)", "stroke-width": 1 }));
@@ -750,11 +708,9 @@ function makeEquityChart(container, points, baseline, opts) {
     lbl.textContent = compactInr(t);
     svg.appendChild(lbl);
   });
-
   // baseline (solid, muted — the capital base)
   const by = y(baseline);
   svg.appendChild(svgEl("line", { x1: margin.left, x2: width - margin.right, y1: by, y2: by, stroke: "var(--baseline)", "stroke-width": 1.25 }));
-
   // area path split by sign relative to baseline, and line path
   let areaAbove = `M ${x(0)} ${by}`, areaBelow = `M ${x(0)} ${by}`, linePath = `M ${x(0)} ${y(points[0].y)}`;
   points.forEach((p, i) => {
@@ -765,7 +721,6 @@ function makeEquityChart(container, points, baseline, opts) {
   });
   areaAbove += ` L ${x(points.length - 1)} ${by} Z`;
   areaBelow += ` L ${x(points.length - 1)} ${by} Z`;
-
   const clipAboveId = "clipAbove" + Math.random().toString(36).slice(2);
   const clipBelowId = "clipBelow" + Math.random().toString(36).slice(2);
   const defs = svgEl("defs", {});
@@ -775,13 +730,10 @@ function makeEquityChart(container, points, baseline, opts) {
   clipBelow.appendChild(svgEl("rect", { x: margin.left, y: by, width: innerW, height: Math.max(0, margin.top + innerH - by) }));
   defs.appendChild(clipAbove); defs.appendChild(clipBelow);
   svg.appendChild(defs);
-
   const areaAboveEl = svgEl("path", { d: areaAbove, fill: "var(--good)", opacity: 0.10, "clip-path": `url(#${clipAboveId})` });
   const areaBelowEl = svgEl("path", { d: areaBelow, fill: "var(--critical)", opacity: 0.10, "clip-path": `url(#${clipBelowId})` });
   svg.appendChild(areaAboveEl); svg.appendChild(areaBelowEl);
-
   svg.appendChild(svgEl("path", { d: linePath, fill: "none", stroke: "var(--ink)", "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
-
   // x-axis labels (sparse)
   const labelEvery = Math.max(1, Math.ceil(points.length / 7));
   points.forEach((p, i) => {
@@ -790,26 +742,21 @@ function makeEquityChart(container, points, baseline, opts) {
     lbl.textContent = p.date.slice(0, 5);
     svg.appendChild(lbl);
   });
-
   // endpoint marker
   const lastI = points.length - 1;
   const endColor = points[lastI].y >= baseline ? "var(--good)" : "var(--critical)";
   svg.appendChild(svgEl("circle", { cx: x(lastI), cy: y(points[lastI].y), r: 4, fill: endColor, stroke: "var(--surface)", "stroke-width": 2 }));
-
   // hover layer
   const hitW = innerW / Math.max(1, points.length - 1);
   const crosshair = svgEl("line", { class: "crosshair-line", x1: 0, x2: 0, y1: margin.top, y2: margin.top + innerH, opacity: 0 });
   svg.appendChild(crosshair);
   const hoverDot = svgEl("circle", { r: 4.5, fill: "var(--ink)", stroke: "var(--surface)", "stroke-width": 2, opacity: 0 });
   svg.appendChild(hoverDot);
-
   const tooltip = document.createElement("div");
   tooltip.className = "tooltip";
   container.style.position = "relative";
-
   const hitArea = svgEl("rect", { x: margin.left, y: margin.top, width: innerW, height: innerH, fill: "transparent" });
   svg.appendChild(hitArea);
-
   function showAt(i) {
     const p = points[i];
     const px = x(i), py = y(p.y);
@@ -836,7 +783,6 @@ function makeEquityChart(container, points, baseline, opts) {
   });
   hitArea.addEventListener("pointerleave", hide);
   hitArea.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
-
   container.appendChild(svg);
   container.appendChild(tooltip);
   return svg;
@@ -849,7 +795,6 @@ function formatTradeDate(d) {
   const day = parseInt(parts[0], 10), mon = parseInt(parts[1], 10) - 1, yr = parts[2];
   return `${day} ${months[mon] || ""} ${yr.length === 2 ? "20" + yr : yr}`;
 }
-
 // Compact area chart for drawdown (single hue, magnitude away from peak).
 function makeDrawdownChart(container, points) {
   container.innerHTML = "";
@@ -861,7 +806,6 @@ function makeDrawdownChart(container, points) {
   const domainMin = ticks[0], domainMax = 0;
   const x = (i) => margin.left + (points.length <= 1 ? innerW / 2 : (i / (points.length - 1)) * innerW);
   const y = (v) => margin.top + innerH - ((v - domainMin) / (domainMax - domainMin || 1)) * innerH;
-
   const svg = svgEl("svg", { viewBox: `0 0 ${width} ${height}`, class: "chart-svg", role: "img", "aria-label": "Drawdown from peak equity" });
   ticks.forEach((t) => {
     svg.appendChild(svgEl("line", { x1: margin.left, x2: width - margin.right, y1: y(t), y2: y(t), stroke: "var(--grid)", "stroke-width": 1 }));
@@ -870,13 +814,11 @@ function makeDrawdownChart(container, points) {
   });
   const zero = y(0);
   svg.appendChild(svgEl("line", { x1: margin.left, x2: width - margin.right, y1: zero, y2: zero, stroke: "var(--baseline)", "stroke-width": 1.25 }));
-
   let area = `M ${x(0)} ${zero}`, line = `M ${x(0)} ${y(points[0].y)}`;
   points.forEach((p, i) => { const px = x(i), py = y(p.y); area += ` L ${px} ${py}`; if (i > 0) line += ` L ${px} ${py}`; });
   area += ` L ${x(points.length - 1)} ${zero} Z`;
   svg.appendChild(svgEl("path", { d: area, fill: "var(--critical)", opacity: 0.12 }));
   svg.appendChild(svgEl("path", { d: line, fill: "none", stroke: "var(--critical)", "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
-
   const labelEvery = Math.max(1, Math.ceil(points.length / 7));
   points.forEach((p, i) => {
     if (i % labelEvery !== 0 && i !== points.length - 1) return;
@@ -885,7 +827,6 @@ function makeDrawdownChart(container, points) {
   });
   container.appendChild(svg);
 }
-
 // Horizontal diverging bar chart (P&L by segment/instrument).
 function makeBarChart(container, data, opts) {
   opts = opts || {};
@@ -898,14 +839,11 @@ function makeBarChart(container, data, opts) {
   const maxAbs = Math.max(1, ...data.map((d) => Math.abs(d.value)));
   const zeroX = margin.left + innerW / 2;
   const scale = (v) => (v / maxAbs) * (innerW / 2 - 4);
-
   const svg = svgEl("svg", { viewBox: `0 0 ${width} ${height}`, class: "chart-svg", role: "img", "aria-label": opts.ariaLabel || "Bar chart" });
   svg.appendChild(svgEl("line", { x1: zeroX, x2: zeroX, y1: margin.top, y2: height - margin.bottom, stroke: "var(--baseline)", "stroke-width": 1.25 }));
-
   const tooltip = document.createElement("div");
   tooltip.className = "tooltip";
   container.style.position = "relative";
-
   data.forEach((d, i) => {
     const rowY = margin.top + i * (rowH + gap);
     const w = scale(d.value);
@@ -914,10 +852,8 @@ function makeBarChart(container, data, opts) {
     const color = d.value >= 0 ? "var(--good)" : "var(--critical)";
     const label = svgEl("text", { x: margin.left - 10, y: rowY + rowH / 2 + 4, "text-anchor": "end", "font-size": 11.5, fill: "var(--ink-2)" });
     label.textContent = d.label; svg.appendChild(label);
-
     const bar = svgEl("rect", { x: barX, y: rowY + 3, width: Math.max(barW, 1.5), height: rowH - 6, rx: 3, fill: color, opacity: 0.85 });
     svg.appendChild(bar);
-
     const estLabelW = compactInr(d.value).length * 7 + 4;
     const outerSpace = w >= 0 ? (width - margin.right) - (barX + barW) : barX - margin.left;
     const fitsOutside = outerSpace >= estLabelW + 8;
@@ -933,18 +869,15 @@ function makeBarChart(container, data, opts) {
       valLbl.setAttribute("fill", "#fff");
     }
     valLbl.textContent = compactInr(d.value); svg.appendChild(valLbl);
-
     const hit = svgEl("rect", { x: margin.left, y: rowY, width: innerW, height: rowH, fill: "transparent" });
     hit.style.cursor = "pointer";
     hit.addEventListener("pointerenter", () => { bar.setAttribute("opacity", 1); tooltip.innerHTML = `<div style="font-weight:600;margin-bottom:2px;">${escapeHtml(d.label)}</div><div class="t-val">${escapeHtml(inr(d.value, { forceSign: true }))}</div>`; tooltip.style.opacity = 1; tooltip.style.left = Math.min(Math.max(barX, 0), container.clientWidth - 160) + "px"; tooltip.style.top = rowY + "px"; });
     hit.addEventListener("pointerleave", () => { bar.setAttribute("opacity", 0.85); tooltip.style.opacity = 0; });
     svg.appendChild(hit);
   });
-
   container.appendChild(svg);
   container.appendChild(tooltip);
 }
-
 /* ============================== RENDER ============================== */
 let state = {
   trades: safeGet(LS_TRADES, []),
@@ -953,14 +886,13 @@ let state = {
   capitalBase: safeGet(LS_CAPITAL, 800000),
   ledgerOpening: safeGet(LS_LEDGER_OPENING, null),
   dismissedFlags: safeGet(LS_DISMISSED_FLAGS, []),
+  manualLTP: safeGet(LS_MANUAL_LTP, {}),
 };
-
 // The true capital base for return/equity math is what you added PLUS whatever
 // was already sitting in the account before that (the ledger's opening
 // balance) — otherwise a pre-existing float gets silently left out of the
 // denominator. Falls back to just the added amount until a ledger is uploaded.
 function effectiveCapitalBase() { return state.capitalBase + (state.ledgerOpening || 0); }
-
 const $ = (sel) => document.querySelector(sel);
 const capitalInput = $("#capitalBase");
 capitalInput.value = state.capitalBase;
@@ -968,13 +900,11 @@ capitalInput.addEventListener("change", () => {
   const v = Number(capitalInput.value) || 0;
   state.capitalBase = v; safeSet(LS_CAPITAL, v); render();
 });
-
 function setStatus(msg, kind) {
   const el = $("#statusLine");
   el.textContent = msg || "";
   el.className = "status-line" + (kind ? " " + kind : "");
 }
-
 function renderChips() {
   const wrap = $("#uploadChips");
   wrap.innerHTML = "";
@@ -985,10 +915,39 @@ function renderChips() {
     wrap.appendChild(chip);
   });
 }
+function manualLtpForPosition(p) {
+  const key = String(p.label || p.symbol || "").trim().toUpperCase();
+  const value = state.manualLTP ? Number(state.manualLTP[key]) : NaN;
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+function manualOpenValue(engine) {
+  return (engine.openPositions || []).reduce((sum, p) => {
+    const ltp = manualLtpForPosition(p);
+    return sum + (ltp !== null ? Math.abs(Number(p.qty || 0)) * ltp : 0);
+  }, 0);
+}
+function manualUnrealized(engine) {
+  return (engine.openPositions || []).reduce((sum, p) => {
+    const ltp = manualLtpForPosition(p);
+    if (ltp === null) return sum;
+    const qty = Math.abs(Number(p.qty || 0));
+    const invested = Number(p.investedValue) || qty * Number(p.avgPrice || 0);
+    return sum + (qty * ltp - invested);
+  }, 0);
+}
+function saveManualLtp(symbol, value) {
+  const key = String(symbol || "").trim().toUpperCase();
+  if (!state.manualLTP) state.manualLTP = {};
+  const n = Number(value);
+  if (Number.isFinite(n) && n > 0) state.manualLTP[key] = n;
+  else delete state.manualLTP[key];
+  safeSet(LS_MANUAL_LTP, state.manualLTP);
+}
 
 function renderKPIs(engine, ledgerInfo) {
   const capBase = effectiveCapitalBase();
-  const equity = capBase + engine.totalRealized + engine.totalUnrealized;
+  const netCapitalMovement = ledgerInfo ? (ledgerInfo.netCapitalMovement || 0) : 0;
+    const equity = capBase + netCapitalMovement + engine.totalRealized + manualUnrealized(engine);
   const totalPnl = engine.totalRealized + engine.totalUnrealized;
   const returnPct = capBase ? (totalPnl / capBase) * 100 : 0;
   const maxDD = engine.equityCurve.reduce((acc, p) => {
@@ -996,23 +955,23 @@ function renderKPIs(engine, ledgerInfo) {
     acc.maxDD = Math.min(acc.maxDD, p.cumRealized - acc.peak);
     return acc;
   }, { peak: 0, maxDD: 0 }).maxDD;
-
   const tiles = [
     { label: "Capital base", value: inr(capBase),
       delta: state.ledgerOpening ? `${inr(state.capitalBase)} added + ${inr(state.ledgerOpening)} carried over from before this tracking period` : null, deltaClass: "flat" },
-    { label: "Capital remaining", value: inr(equity), delta: `${pct(returnPct)} · started with ${inr(capBase)}`, deltaClass: returnPct >= 0 ? "up" : "down" },
+    { label: "Capital remaining", value: inr(equity), delta: `${pct(returnPct)} · fixed base ${inr(capBase)} · subsequent capital movement ${netCapitalMovement >= 0 ? "+" : ""}${inr(netCapitalMovement)}`, deltaClass: returnPct >= 0 ? "up" : "down" },
     { label: "Available cash", value: ledgerInfo && ledgerInfo.balanceStr ? ledgerInfo.balanceStr : "—",
       delta: ledgerInfo ? "ledger closing balance — actual cash sitting in the account" : "upload the ledger to see this", deltaClass: "flat" },
     { label: "Realized P&L", value: inr(engine.totalRealized, { forceSign: true }), deltaClass: engine.totalRealized >= 0 ? "up" : "down",
       delta: engine.provisionalRealized ? `incl. ${inr(engine.provisionalRealized, { forceSign: true })} provisional — see note above` : null },
-    { label: "Unrealized P&L", value: inr(engine.totalUnrealized, { forceSign: true }), deltaClass: engine.totalUnrealized >= 0 ? "up" : "down",
-      delta: engine.excludedUnrealizedCount ? `${engine.excludedUnrealizedCount} flagged position${engine.excludedUnrealizedCount > 1 ? "s" : ""} excluded` : null },
+    { label: "Unrealized P&L", value: inr(manualUnrealized(engine), { forceSign: true }), deltaClass: manualUnrealized(engine) >= 0 ? "up" : "down",
+      delta: "based on manually entered Latest LTP" },
     { label: "Max drawdown", value: inr(maxDD), deltaClass: "down" },
     { label: "Win rate", value: (engine.winRate * 100).toFixed(0) + "%", delta: `${engine.winCount}W / ${engine.lossCount}L closes`, deltaClass: "flat" },
     { label: "Avg win / avg loss", value: `${inr(engine.avgWin, {forceSign:false})} / ${inr(engine.avgLoss, {forceSign:false})}`, delta: null },
     { label: "Open positions", value: String(engine.openPositions.length), delta: null, deltaClass: "flat" },
-    { label: "Value of open trades", value: inr(engine.totalOpenValue),
-      delta: engine.excludedUnrealizedCount ? `at last known price — excl. ${engine.excludedUnrealizedCount} flagged position${engine.excludedUnrealizedCount > 1 ? "s" : ""}` : "at last known price", deltaClass: "flat" },
+    { label: "Invested amount", value: inr(engine.totalInvestedValue), delta: `${engine.openPositions.length} open position${engine.openPositions.length === 1 ? "" : "s"} · based on average entry price`, deltaClass: "flat" },
+    { label: "Value of open trades", value: inr(manualOpenValue(engine)),
+      delta: "based on manually entered Latest LTP", deltaClass: "flat" },
   ];
   const row = $("#kpiRow");
   row.innerHTML = "";
@@ -1024,7 +983,6 @@ function renderKPIs(engine, ledgerInfo) {
     row.appendChild(el);
   });
 }
-
 function renderFlagBanner(engine) {
   const el = $("#flagBanner");
   const visible = engine.flags.filter((f) => !state.dismissedFlags.includes(f.id));
@@ -1033,7 +991,6 @@ function renderFlagBanner(engine) {
     visible.map((f) => `<div class="flag-row"><span>${escapeHtml(f.message)}</span><button class="flag-dismiss" data-flag-id="${escapeHtml(f.id)}" type="button">Got it — don't show again</button></div>`).join("") +
     `</div>`;
 }
-
 function renderEquity(engine) {
   const capBase = effectiveCapitalBase();
   const points = engine.equityCurve.map((p) => ({ date: p.date, y: capBase + p.cumRealized }));
@@ -1043,12 +1000,10 @@ function renderEquity(engine) {
   }
   makeEquityChart($("#equityChartWrap"), points, capBase, { ariaLabel: "Equity versus capital base over time" });
   $("#equitySub").textContent = engine.firstDate ? `${formatTradeDate(engine.firstDate)} – ${formatTradeDate(engine.lastDate)}` : "";
-
   const tbl = $("#equityTable");
   let rows = points.map((p) => `<tr><td>${escapeHtml(formatTradeDate(p.date))}${p.isMTM ? " (incl. unrealized)" : ""}</td><td class="num right">${inr(p.y)}</td><td class="num right">${inr(p.y - capBase, { forceSign: true })}</td></tr>`).join("");
   tbl.innerHTML = `<table class="data"><thead><tr><th>Date</th><th class="right">Equity</th><th class="right">vs. capital</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
-
 function renderDrawdown(engine) {
   let peak = 0;
   const points = engine.equityCurve.map((p) => { peak = Math.max(peak, p.cumRealized); return { date: p.date, y: p.cumRealized - peak }; });
@@ -1058,23 +1013,65 @@ function renderDrawdown(engine) {
   let rows = points.map((p) => `<tr><td>${escapeHtml(formatTradeDate(p.date))}</td><td class="num right">${inr(p.y)}</td></tr>`).join("");
   tbl.innerHTML = `<table class="data"><thead><tr><th>Date</th><th class="right">Drawdown</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
-
 function renderOpenPositions(engine) {
-  $("#openSub").textContent = `${engine.openPositions.length} instrument${engine.openPositions.length === 1 ? "" : "s"} still held`;
+  const rows = engine.openPositions || [];
+  $("#openSub").textContent = `${rows.length} instrument${rows.length === 1 ? "" : "s"} still held · invested ${inr(engine.totalInvestedValue)} · current value ${inr(manualOpenValue(engine))}`;
+
   const el = $("#openPositionsTable");
-  if (!engine.openPositions.length) { el.innerHTML = `<div class="note" style="padding:14px;">No open positions — everything in this data set has been closed out.</div>`; return; }
-  const rows = engine.openPositions
-    .slice().sort((a, b) => Math.abs(b.unrealizedPnL) - Math.abs(a.unrealizedPnL))
-    .map((p) => `<tr>
-      <td>${escapeHtml(p.label)}</td>
-      <td><span class="pill ${p.segment === "CASH" ? "cash" : "fno"}">${escapeHtml(p.segment)}</span></td>
-      <td class="num right">${p.qty}</td>
-      <td class="num right">${p.avgPrice.toFixed(2)}</td>
-      <td class="num right">${p.lastClose.toFixed(2)}</td>
-      <td class="num right">${p.suspicious ? "flagged" : inr(p.currentValue)}</td>
-      <td class="num right ${p.suspicious ? "" : (p.unrealizedPnL >= 0 ? "up" : "down")}">${p.suspicious ? "flagged" : inr(p.unrealizedPnL, { forceSign: true })}</td>
-    </tr>`).join("");
-  el.innerHTML = `<table class="data"><thead><tr><th>Instrument</th><th>Segment</th><th class="right">Qty</th><th class="right">Avg price</th><th class="right">Last close</th><th class="right">Value</th><th class="right">Unrealized</th></tr></thead><tbody>${rows}</tbody></table>`;
+  if (!rows.length) {
+    el.innerHTML = `<div class="note" style="padding:14px;">No open positions — everything in this data set has been closed out.</div>`;
+    return;
+  }
+
+  const totalInvested = rows.reduce((s, p) => s + (Number(p.investedValue) || Math.abs(Number(p.qty || 0)) * Number(p.avgPrice || 0)), 0);
+  const totalCurrent = manualOpenValue(engine);
+  const totalPnl = manualUnrealized(engine);
+
+  const body = rows.slice()
+    .sort((a, b) => Math.abs(Number(b.unrealizedPnL || 0)) - Math.abs(Number(a.unrealizedPnL || 0)))
+    .map((p) => {
+      const symbol = String(p.label || "").trim();
+      const ltp = manualLtpForPosition(p);
+      const qty = Math.abs(Number(p.qty || 0));
+      const invested = Number(p.investedValue) || qty * Number(p.avgPrice || 0);
+      const current = ltp !== null ? qty * ltp : null;
+      const pnl = current !== null ? current - invested : null;
+      return `<tr>
+        <td>${escapeHtml(symbol)}</td>
+        <td><span class="pill ${p.segment === "CASH" ? "cash" : "fno"}">${escapeHtml(p.segment)}</span></td>
+        <td class="num right">${p.qty}</td>
+        <td class="num right">${Number(p.avgPrice || 0).toFixed(2)}</td>
+        <td class="num right">${inr(invested)}</td>
+        <td class="num right">
+          <input class="manual-ltp" data-symbol="${escapeHtml(symbol)}" type="number" min="0" step="0.01"
+            inputmode="decimal" value="${ltp !== null ? ltp : ""}" placeholder="Enter LTP"
+            style="width:110px; padding:6px 8px; border:1px solid var(--border); border-radius:7px; background:var(--panel); color:var(--text); text-align:right;">
+        </td>
+        <td class="num right">${current !== null ? inr(current) : "—"}</td>
+        <td class="num right ${pnl === null ? "" : (pnl >= 0 ? "up" : "down")}">${pnl !== null ? inr(pnl, {forceSign:true}) : "—"}</td>
+      </tr>`;
+    }).join("");
+
+  el.innerHTML = `<table class="data">
+    <thead><tr>
+      <th>Instrument</th><th>Segment</th><th class="right">Qty</th><th class="right">Avg price</th>
+      <th class="right">Invested</th><th class="right">Latest LTP</th><th class="right">Current Value</th><th class="right">Unrealized</th>
+    </tr></thead>
+    <tbody>${body}</tbody>
+    <tfoot><tr>
+      <th colspan="4">Total</th><th class="right">${inr(totalInvested)}</th><th></th>
+      <th class="right">${inr(totalCurrent)}</th>
+      <th class="right ${totalPnl >= 0 ? "up" : "down"}">${inr(totalPnl, {forceSign:true})}</th>
+    </tr></tfoot>
+  </table>
+  <div class="note" style="margin-top:8px;">Enter the latest market price in <strong>Latest LTP</strong>. The value is saved in this browser and used for Current Value, Unrealized P&amp;L, Value of Open Trades and Capital Remaining.</div>`;
+
+  el.querySelectorAll(".manual-ltp").forEach((input) => {
+    input.addEventListener("change", () => {
+      saveManualLtp(input.dataset.symbol, input.value);
+      render();
+    });
+  });
 }
 
 function renderSegmentPnl(engine) {
@@ -1086,25 +1083,38 @@ function renderSegmentPnl(engine) {
   const rows = data.map((d) => `<tr><td>${escapeHtml(d.label)}</td><td class="num right ${d.value >= 0 ? "up" : "down"}">${inr(d.value, { forceSign: true })}</td></tr>`).join("");
   $("#segTable").innerHTML = `<table class="data"><thead><tr><th>Segment</th><th class="right">Realized P&L</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
-
 function renderLedgerPanel(ledgerInfo) {
   const el = $("#ledgerPanel");
   if (!ledgerInfo) { el.innerHTML = `<p class="note">No ledger uploaded yet.</p>`; return; }
-  const moveRows = ledgerInfo.capitalMoves.map((m) => `<tr><td>${escapeHtml(formatLedgerDate(m.date))}</td><td>${escapeHtml(m.particulars)}</td><td class="num right ${m.credit ? "up" : "down"}">${m.credit ? inr(m.credit, {forceSign:true}) : inr(-m.debit, {forceSign:true})}</td></tr>`).join("");
+  const moveRows = ledgerInfo.capitalMoves.map((m) => {
+    const isDeposit = Number(m.credit || 0) > 0;
+    const amount = isDeposit ? Number(m.credit) : -Number(m.debit || 0);
+    return `<tr>
+      <td>${escapeHtml(formatLedgerDate(m.date))}</td>
+      <td>${escapeHtml(m.particulars)}</td>
+      <td class="num right ${isDeposit ? "up" : "down"}">${inr(amount, {forceSign:true})}</td>
+    </tr>`;
+  }).join("");
+  const netClass = ledgerInfo.netCapitalMovement > 0 ? "up" : (ledgerInfo.netCapitalMovement < 0 ? "down" : "flat");
   el.innerHTML = `
-    <div class="kpi-row" style="grid-template-columns:repeat(3,1fr); margin-bottom:16px;">
+    <div class="kpi-row" style="grid-template-columns:repeat(5,1fr); margin-bottom:16px;">
       <div class="kpi"><div class="label">Ledger opening balance</div><div class="kpi-value">${inr(ledgerInfo.openingBalance || 0)}</div><div class="delta flat">included in the capital base above</div></div>
-      <div class="kpi"><div class="label">Ledger closing balance</div><div class="kpi-value">${ledgerInfo.balanceStr || "—"}</div></div>
-      <div class="kpi"><div class="label">Margin transfers (excluded from P&L)</div><div class="kpi-value">${ledgerInfo.marginCount}</div></div>
+      <div class="kpi"><div class="label">Ledger closing balance</div><div class="kpi-value">${ledgerInfo.balanceStr || "—"}</div><div class="delta flat">actual cash balance</div></div>
+      <div class="kpi"><div class="label">Initial capital (04-Aug)</div><div class="kpi-value up">${inr(ledgerInfo.initialDeposit || state.capitalBase)}</div><div class="delta flat">kept as fixed capital base</div></div>
+      <div class="kpi"><div class="label">Subsequent deposits</div><div class="kpi-value up">${inr(ledgerInfo.subsequentDeposits)}</div><div class="delta flat">${ledgerInfo.depositCount > 1 ? ledgerInfo.depositCount - 1 : 0} after-initial transaction${(ledgerInfo.depositCount > 1 ? ledgerInfo.depositCount - 1 : 0) === 1 ? "" : "s"}</div></div>
+      <div class="kpi"><div class="label">Total withdrawals</div><div class="kpi-value down">${inr(-ledgerInfo.totalWithdrawals)}</div><div class="delta flat">${ledgerInfo.withdrawalCount} transaction${ledgerInfo.withdrawalCount === 1 ? "" : "s"}</div></div>
+      <div class="kpi"><div class="label">Balance Capital</div><div class="kpi-value ${netClass}">${inr((state.capitalBase || 0) + (ledgerInfo.netCapitalMovement || 0))}</div><div class="delta flat">₹8 lakh base + subsequent deposits − withdrawals</div></div>
+    </div>
+    <div class="sub" style="margin-bottom:8px;">
+      Capital movements detected in the ledger — deposits are shown in green and withdrawals in red. These movements are displayed separately from trading P&L.
     </div>
     ${ledgerInfo.capitalMoves.length ? `
-    <div class="sub" style="margin-bottom:8px;">Capital movements detected in the ledger (deposits/withdrawals) — shown for reference; the capital-base field above is not adjusted automatically:</div>
     <div class="table-scroll" style="max-height:220px;">
       <table class="data"><thead><tr><th>Date</th><th>Particulars</th><th class="right">Amount</th></tr></thead><tbody>${moveRows}</tbody></table>
     </div>` : `<p class="note">No deposits or withdrawals detected in this ledger.</p>`}
+    <p class="note">Margin transfers: ${ledgerInfo.marginCount}. Capital-base field above is not automatically changed by deposits or withdrawals.</p>
   `;
 }
-
 function formatLedgerDate(d) {
   if (!d) return "";
   const parts = String(d).split("/");
@@ -1113,26 +1123,86 @@ function formatLedgerDate(d) {
   const day = parseInt(parts[0], 10), mon = parseInt(parts[1], 10) - 1, yr = parts[2];
   return `${day} ${months[mon] || ""} ${yr.length === 2 ? "20" + yr : yr}`;
 }
-
 function computeLedgerInfo() {
   if (!state.ledger.length) return null;
   const toDateL = (s) => { const p = String(s).split("/"); const yy = p[2].length === 2 ? "20" + p[2] : p[2]; return new Date(Number(yy), Number(p[1]) - 1, Number(p[0])).getTime(); };
   const sorted = state.ledger.slice().sort((a, b) => toDateL(a.date) - toDateL(b.date));
   const last = sorted[sorted.length - 1];
-  const capitalMoves = sorted.filter((e) => /UPI transfer|NEFT|RTGS|IMPS|fund transfer/i.test(e.particulars));
+
+  // Capital structure:
+  // ₹8,00,000 added on 04-Aug-2026 is the fixed initial capital base.
+  // Any deposit after 04-Aug-2026 is additional capital.
+  // Any withdrawal after 04-Aug-2026 reduces capital.
+  // Credit = deposit/inflow; debit = withdrawal/outflow.
+  const capitalMoves = sorted.filter((e) => /UPI transfer|NEFT|RTGS|IMPS|fund transfer|withdrawal|deposit|payout|fund withdrawal/i.test(e.particulars));
+  const initialCapitalDate = new Date(2026, 7, 4).getTime();
+
+  const laterCapitalMoves = capitalMoves.filter((e) => toDateL(e.date) > initialCapitalDate);
+  const initialCapitalMoves = capitalMoves.filter((e) => toDateL(e.date) <= initialCapitalDate);
+
+  const initialDeposit = initialCapitalMoves.reduce((s, e) => s + Number(e.credit || 0), 0);
+  const subsequentDeposits = laterCapitalMoves.reduce((s, e) => s + Number(e.credit || 0), 0);
+  const subsequentWithdrawals = laterCapitalMoves.reduce((s, e) => s + Number(e.debit || 0), 0);
+
+  // Keep the user-entered capital base as the fixed initial ₹8 lakh.
+  // Do NOT add the initial deposit again from the ledger.
+  const totalDeposits = initialDeposit + subsequentDeposits;
+  const totalWithdrawals = subsequentWithdrawals;
+  const depositCount = capitalMoves.filter((e) => Number(e.credit || 0) > 0).length;
+  const withdrawalCount = laterCapitalMoves.filter((e) => Number(e.debit || 0) > 0).length;
+  const netCapitalMovement = subsequentDeposits - subsequentWithdrawals;
   const marginCount = sorted.filter((e) => /Curr\.?\s*Mrgn|Margin/i.test(e.particulars)).length;
+
   return {
     openingBalance: state.ledgerOpening || null,
     balanceStr: last ? inr(last.balance) : "—",
     capitalMoves, marginCount,
+    initialDeposit, subsequentDeposits, subsequentWithdrawals,
+    totalDeposits, totalWithdrawals, netCapitalMovement,
+    depositCount, withdrawalCount,
   };
 }
 
+function dateKeyTL(value) {
+  const d = new Date(value);
+  if (!Number.isNaN(d.getTime())) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+  const s = String(value || "").trim();
+  const match = s.match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+  return match ? `${match[1]}-${String(match[2]).padStart(2,"0")}-${String(match[3]).padStart(2,"0")}` : s;
+}
+
+function populateTradeDateDropdown(engine) {
+  const select = $("#logTradeDate");
+  if (!select) return;
+  const current = select.value || "ALL";
+  const dates = [...new Set((engine.tradeLog || []).map(t => dateKeyTL(t.date)).filter(Boolean))]
+    .sort((a, b) => b.localeCompare(a));
+
+  select.innerHTML = `<option value="ALL">All dates</option>` +
+    dates.map(d => `<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join("");
+
+  select.value = dates.includes(current) || current === "ALL" ? current : "ALL";
+}
+
 function renderTradeLog(engine) {
+  populateTradeDateDropdown(engine);
   const search = ($("#logSearch").value || "").toLowerCase();
   const segFilter = $("#logSegFilter").value;
-  let rows = engine.tradeLog.filter((t) => (segFilter === "ALL" || t.segment === segFilter) && (!search || t.label.toLowerCase().includes(search)));
-  $("#logSub").textContent = `${rows.length} of ${engine.tradeLog.length} rows`;
+  const selectedDate = $("#logTradeDate").value;
+
+  let rows = engine.tradeLog.filter((t) => {
+    const segmentOk = segFilter === "ALL" || t.segment === segFilter;
+    const searchOk = !search || t.label.toLowerCase().includes(search);
+    const dateOk = selectedDate === "ALL" || dateKeyTL(t.date) === selectedDate;
+    return segmentOk && searchOk && dateOk;
+  });
+
+  $("#logSub").textContent = `${rows.length} of ${engine.tradeLog.length} rows${selectedDate !== "ALL" ? ` · ${selectedDate}` : ""}`;
   const html = rows.slice().reverse().slice(0, 500).map((t) => `<tr>
       <td>${escapeHtml(formatTradeDate(t.date))}</td>
       <td>${escapeHtml(t.label)}</td>
@@ -1143,14 +1213,12 @@ function renderTradeLog(engine) {
     </tr>`).join("");
   $("#tradeLogTable").innerHTML = `<table class="data"><thead><tr><th>Date</th><th>Instrument</th><th>Segment</th><th class="right">Buy</th><th class="right">Sell</th><th class="right">Realized</th></tr></thead><tbody>${html}</tbody></table>`;
 }
-
 function renderCapitalNote() {
   const el = $("#capitalNote");
-  el.textContent = state.ledgerOpening
-    ? `+ ${inr(state.ledgerOpening)} carried over from before this tracking period (per the ledger) = ${inr(effectiveCapitalBase())} total`
+  el.textContent = state.capitalBase
+    ? `Fixed initial capital base: ${inr(state.capitalBase)} added on 04-Aug-2026. Subsequent ledger deposits/withdrawals are tracked separately.`
     : "";
 }
-
 function render() {
   renderCapitalNote();
   if (!state.trades.length) {
@@ -1173,7 +1241,6 @@ function render() {
   renderTradeLog(engine);
   renderChips();
 }
-
 /* ============================== FILE HANDLING ============================== */
 function readWorkbook(file) {
   return new Promise((resolve, reject) => {
@@ -1183,7 +1250,6 @@ function readWorkbook(file) {
     reader.readAsArrayBuffer(file);
   });
 }
-
 $("#fileTrades").addEventListener("change", async (e) => {
   const file = e.target.files[0]; if (!file) return;
   try {
@@ -1198,7 +1264,6 @@ $("#fileTrades").addEventListener("change", async (e) => {
   } catch (err) { setStatus("Couldn't parse that trade-listing file: " + err.message, "err"); }
   e.target.value = "";
 });
-
 $("#fileLedger").addEventListener("change", async (e) => {
   const file = e.target.files[0]; if (!file) return;
   try {
@@ -1214,15 +1279,13 @@ $("#fileLedger").addEventListener("change", async (e) => {
   } catch (err) { setStatus("Couldn't parse that ledger file: " + err.message, "err"); }
   e.target.value = "";
 });
-
 $("#btnReset").addEventListener("click", () => {
   if (!confirm("Clear all trades, ledger entries, and upload history stored in this browser? This can't be undone.")) return;
   state = { trades: [], ledger: [], uploads: [], capitalBase: state.capitalBase, ledgerOpening: null, dismissedFlags: [] };
-  safeSet(LS_TRADES, []); safeSet(LS_LEDGER, []); safeSet(LS_UPLOADS, []); safeSet(LS_LEDGER_OPENING, null); safeSet(LS_DISMISSED_FLAGS, []);
+  safeSet(LS_TRADES, []); safeSet(LS_LEDGER, []); safeSet(LS_UPLOADS, []); safeSet(LS_LEDGER_OPENING, null); safeSet(LS_MANUAL_LTP, {}); safeSet(LS_DISMISSED_FLAGS, []);
   setStatus("All stored data cleared.", "ok");
   render();
 });
-
 /* ============================== BACKUP: EXPORT / IMPORT ============================== */
 // Saving a file from inside the Claude Artifact viewer's sandbox requires the
 // `downloads` capability (a plain <a download> is inert there) — but the same
@@ -1260,14 +1323,12 @@ async function saveFile(filename, contentString, mime) {
     return { ok: false, message: "Couldn't save the file: " + err.message };
   }
 }
-
 function todayStr() { const d = new Date(); return d.toISOString().slice(0, 10); }
-
 $("#btnExportBackup").addEventListener("click", async () => {
   const backup = {
     schema: "stwp-trade-ledger-backup", version: 1, exportedAt: new Date().toISOString(),
     capitalBase: state.capitalBase, trades: state.trades, ledger: state.ledger, uploads: state.uploads,
-    ledgerOpening: state.ledgerOpening, dismissedFlags: state.dismissedFlags,
+    ledgerOpening: state.ledgerOpening, manualLTP: state.manualLTP, dismissedFlags: state.dismissedFlags,
   };
   const filename = `stwp-trade-ledger-backup-${todayStr()}.json`;
   setStatus("Preparing backup…");
@@ -1275,7 +1336,6 @@ $("#btnExportBackup").addEventListener("click", async () => {
   if (result.ok) setStatus(`Backup saved: ${filename} (${state.trades.length} trades, ${state.ledger.length} ledger rows).`, "ok");
   else setStatus(result.message, result.message === "Save cancelled." ? "" : "err");
 });
-
 $("#fileBackup").addEventListener("change", (e) => {
   const file = e.target.files[0]; if (!file) return;
   const reader = new FileReader();
@@ -1292,6 +1352,10 @@ $("#fileBackup").addEventListener("change", (e) => {
       state.ledger = mergedLedger; safeSet(LS_LEDGER, mergedLedger);
       if (Array.isArray(backup.uploads)) { state.uploads = state.uploads.concat(backup.uploads); safeSet(LS_UPLOADS, state.uploads); }
       if (state.ledgerOpening == null && typeof backup.ledgerOpening === "number") { state.ledgerOpening = backup.ledgerOpening; safeSet(LS_LEDGER_OPENING, backup.ledgerOpening); }
+      if (backup.manualLTP && typeof backup.manualLTP === "object") {
+        state.manualLTP = Object.assign({}, state.manualLTP || {}, backup.manualLTP);
+        safeSet(LS_MANUAL_LTP, state.manualLTP);
+      }
       if (Array.isArray(backup.dismissedFlags) && backup.dismissedFlags.length) {
         state.dismissedFlags = [...new Set(state.dismissedFlags.concat(backup.dismissedFlags))];
         safeSet(LS_DISMISSED_FLAGS, state.dismissedFlags);
@@ -1311,7 +1375,6 @@ $("#fileBackup").addEventListener("change", (e) => {
   reader.readAsText(file);
   e.target.value = "";
 });
-
 document.addEventListener("click", (e) => {
   const tableBtn = e.target.closest(".table-toggle");
   if (tableBtn) {
@@ -1331,9 +1394,11 @@ document.addEventListener("click", (e) => {
     render();
   }
 });
-
 $("#logSearch").addEventListener("input", () => { const engine = runEngine(state.trades); renderTradeLog(engine); });
 $("#logSegFilter").addEventListener("change", () => { const engine = runEngine(state.trades); renderTradeLog(engine); });
-
+$("#logTradeDate").addEventListener("change", () => { const engine = runEngine(state.trades); renderTradeLog(engine); });
 render();
 </script>
+
+</body>
+</html>
